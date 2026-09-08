@@ -252,7 +252,7 @@ export const Config = Schema.intersect([
     ).description('全局字段映射 JSON'),
     twitterAuthToken: Schema.string().default('').role('secret').description('X 登录态 auth_token（解析需登录推文用，受 Cloudflare 指纹限制可能 403）'),
     twitterCt0: Schema.string().default('').role('secret').description('X 登录态 ct0（与 auth_token 配对）'),
-    tweetTranslateEnabled: Schema.boolean().default(false).description('外语推文自动翻译（配置 X 登录态时用网页同源 Grok 翻译，否则通用翻译；附译文行）'),
+    tweetTranslateEnabled: Schema.boolean().default(true).description('外语推文自动翻译（配置 X 登录态时用网页同源 Grok 翻译，否则通用翻译；附译文行）'),
     tweetTranslateLang: Schema.union([
       Schema.const('zh').description('简体中文'),
       Schema.const('zh-TW').description('繁體中文'),
