@@ -31,9 +31,7 @@ This package is a fork with **independent semver + upstream baseline in build me
 
 本项目在开发过程中 **LLM（大语言模型）参与程度较高**，因此在版本管理上**未能充分利用语义化版本（semver）**：不少功能尚未经过充分稳定验证就以 minor 版本号发布了，导致版本号难以准确反映功能的成熟度，也可能给依赖方带来不必要的升级成本。为此我们向所有使用者**致歉**。
 
-后续将尽量收敛：更谨慎地区分 patch/minor/major，让版本号如实反映变更性质与稳定程度。如需了解某个版本的具体行为，请以仓库的 commit 与 changelog 为准，而非仅依赖版本号。
-
-> 本项目为上游 [Minecraft-1314/koishi-plugin-video-parser-all](https://github.com/Minecraft-1314/koishi-plugin-video-parser-all) 的 fork，**如有变更，将同步上游**（功能修复与兼容性更新会尽力向上游贡献或对齐）。
+> 本项目为上游 [Minecraft-1314/koishi-plugin-video-parser-all](https://github.com/Minecraft-1314/koishi-plugin-video-parser-all) 的 fork，**变更同步上游**。
 
 ## 项目仓库 (Repository)
 - GitHub: `https://github.com/char-46/koishi-plugin-video-parser-all`
