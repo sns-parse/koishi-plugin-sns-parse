@@ -150,8 +150,10 @@ function mapSyndication(tw: any): ParsedData {
   // 纯文字推文：type=text（无任何媒体但有正文，属合法内容）
   p.type = p.video ? 'video' : (p.images.length ? 'image' : 'text')
 
-  p.title = text.slice(0, 100)
-  p.desc = cleanDesc(text)
+  // 标题/简介同源；标题也须基于清理后的文本，否则 t.co 短链会让去重判断失效
+  const cleaned = cleanDesc(text)
+  p.title = cleaned.slice(0, 100)
+  p.desc = cleaned
   p.author = String(pick(user.name, user.screen_name, ''))
   p.uid = String(pick(user.screen_name, user.id_str, ''))
   p.avatar = String(pick(user.profile_image_url_https, user.profile_image_url, ''))
@@ -210,8 +212,10 @@ function mapGraphql(rawResult: any): ParsedData {
   // 纯文字推文：type=text
   p.type = p.video ? 'video' : (p.images.length ? 'image' : 'text')
 
-  p.title = text.slice(0, 100)
-  p.desc = cleanDesc(text)
+  // 标题/简介同源；标题也须基于清理后的文本，否则 t.co 短链会让去重判断失效
+  const cleaned = cleanDesc(text)
+  p.title = cleaned.slice(0, 100)
+  p.desc = cleaned
   p.author = String(pick(ulegacy.name, ulegacy.screen_name, ''))
   p.uid = String(pick(ulegacy.screen_name, user?.rest_id, ''))
   p.avatar = String(pick(ulegacy.profile_image_url_https, ''))

@@ -145,6 +145,8 @@ describe('parseTwitter — X 原生 syndication 解析', () => {
     const t = await parseTwitter('https://x.com/u/status/1234567890', mockHttp(tcoTweet))
     expect(t.desc).toBe('骚狗只配脱光衣服在地上爬行')
     expect(t.desc).not.toContain('t.co')
+    // 标题同源去重：标题基于清理后文本，与简介相同则置空（不再重复展示）
+    expect(t.title).toBe('')
   })
 
   it('非 X 链接抛出"无法提取 ID"', async () => {
