@@ -107,8 +107,8 @@ function extractSyndicationMedia(tw: any, p: ParsedData): void {
             if (dur) p.duration = dur
             if (m.type === 'animated_gif') p.isGif = true
           } else {
-            // 多视频推文：其余视频逐条携带（发送层每条独立发送）
-            ;(p.extraVideos ||= []).push({ url: vs[0].url, isGif: m.type === 'animated_gif', duration: dur })
+            // 多视频推文：其余视频逐条携带（发送层每条独立发送，封面随行用于展示与单独审核）
+            ;(p.extraVideos ||= []).push({ url: vs[0].url, isGif: m.type === 'animated_gif', duration: dur, cover: String(pick(m.media_url_https, '')) })
           }
         }
       }
@@ -202,7 +202,7 @@ function mapGraphql(rawResult: any): ParsedData {
           if (dur) p.duration = dur
           if (m.type === 'animated_gif') p.isGif = true
         } else {
-          ;(p.extraVideos ||= []).push({ url: vs[0].url, isGif: m.type === 'animated_gif', duration: dur })
+          ;(p.extraVideos ||= []).push({ url: vs[0].url, isGif: m.type === 'animated_gif', duration: dur, cover: String(pick(m.media_url_https, '')) })
         }
       }
     }

@@ -28,9 +28,10 @@ export interface ProcessedItem {
   video: VideoOutcome
   /** 推文动图转 GIF 的成品（转换失败为 null，回退发视频） */
   gif?: Buffer | null
-  /** 多视频推文的其余视频及其 GIF 成品（与 extraVideos 一一对应） */
+  /** 多视频推文的其余视频及其 GIF 成品/封面（与 extraVideos 一一对应） */
   extraVideos?: VideoOutcome[]
   extraGifs?: (Buffer | null)[]
+  extraCovers?: (ImageOutcome | null)[]
 }
 
 /** 一个待发送的语义单元 */
@@ -76,13 +77,19 @@ export function buildUnits(rt: ParserRuntime, item: ProcessedItem): MessageUnit[
   if (config.showAuthorAvatar && p.avatar && item.avatar.kind !== 'drop' && item.avatar.kind !== 'scrambled' && item.avatar.url) {
     push([h.image(item.avatar.url)], true)
   }
-  // ③ 封面（非混淆）
+  // ③ 封面（非混淆）；多视频推文的每个视频封面都进概述区
   if (item.cover && item.cover.kind === 'raw' && item.cover.url
       && p.cover && config.showCoverImage && p.type !== 'live_photo' && p.type !== 'image' && p.type !== 'live') {
     const c: h[] = []
     if (config.showCoverText) c.push(h.text(config.coverText || '封面：'))
     c.push(h.image(item.cover.url))
     push(c, true)
+  }
+  if (config.showCoverImage && p.type !== 'live_photo' && p.type !== 'image' && p.type !== 'live') {
+    for (const ec of item.extraCovers || []) {
+      if (ec?.kind === 'raw' && ec.url && ec.url !== item.cover?.url) push([h.image(ec.url)], true)
+      else if (ec?.kind === 'link' && ec.url && ec.url !== item.cover?.url) push([h.text(`封面链接：${ec.url}`)], true)
+    }
   }
   // ④ 音乐封面
   if (config.showMusicCover && p.music.cover) push([h.image(p.music.cover)], true)
@@ -118,13 +125,19 @@ export function buildUnits(rt: ParserRuntime, item: ProcessedItem): MessageUnit[
   // ⑧ 直播提示
   if (p.type === 'live' && config.sendLiveMessage) push([h.text('直播进行中，无法发送视频流。')], true)
 
-  // ⑨ 受限视频：提示并入首条消息；取件码独立为干脆的「取视频 <token>」
-  const videoHint = buildVideoHint(rt, item)
+  // ⑨ 受限视频：提示并入首条消息（存在任一受限视频即提示一次）；每个取件码独立成条
+  const cardOutcomes = ([item.video, ...(item.extraVideos || [])] as any[])
+    .filter(v => v?.kind === 'card' && v.token) as { kind: 'card'; token: string }[]
+  let videoHint = buildVideoHint(rt, item)
+  if (!videoHint && cardOutcomes.length) {
+    // 主视频未受限但存在受限的额外视频（按各自封面单独判定）：仍给出领取提示
+    videoHint = buildVideoHint(rt, { ...item, video: cardOutcomes[0] } as any)
+  }
   if (videoHint) push([h.text(videoHint)], true)
-  if (item.video.kind === 'card' && item.video.token) push([h.text(`取视频 ${item.video.token}`)], false)
+  for (const c of cardOutcomes) push([h.text(`取视频 ${c.token}`)], false)
 
-  // ⑩ 混淆图：首条只报数量；每张独立为干脆的「解混淆 <token>[混淆图]」
-  const scrambledImgs = [item.avatar, item.cover, ...item.images]
+  // ⑩ 混淆图：首条只报数量；每张独立为干脆的「解混淆 <token>[混淆图]」（多视频封面同策略）
+  const scrambledImgs = [item.avatar, item.cover, ...(item.extraCovers || []), ...item.images]
     .filter(img => img?.kind === 'scrambled' && img.buffer) as { kind: 'scrambled'; buffer: Buffer; token?: string }[]
   if (scrambledImgs.length) {
     const summary = buildImageHint(rt, scrambledImgs.length)

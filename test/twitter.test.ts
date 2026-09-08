@@ -107,6 +107,7 @@ describe('parseTwitter — X 原生 syndication 解析', () => {
     expect(t.extraVideos![0].url).toBe('https://video.twimg.com/v2.mp4')
     expect(t.extraVideos![0].isGif).toBe(true)
     expect(t.extraVideos![0].duration).toBe(3)
+    expect(t.extraVideos![0].cover).toBe('https://pbs.twimg.com/p2.jpg')
   })
 
   it('tombstone（需登录/已删除）：抛出明确错误', async () => {

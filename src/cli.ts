@@ -63,6 +63,7 @@ function parseArgs(argv: string[]): CliArgs {
       case '--dedicated-first': args.dedicatedFirst = true; break
       case '--twitter-auth-token': args.twitterAuthToken = argv[++i]; break
       case '--twitter-ct0': args.twitterCt0 = argv[++i]; break
+      case '-v': case '--version': printVersion(); process.exit(0)
       case '-h': case '--help': printHelp(); process.exit(0)
       default:
         if (a.startsWith('-')) { console.error(`未知选项: ${a}`); process.exit(1) }
@@ -73,6 +74,11 @@ function parseArgs(argv: string[]): CliArgs {
   return args
 }
 
+function printVersion(): void {
+  const pkg = require('../package.json')
+  console.log(`video-parser ${pkg.version}`)
+}
+
 function printHelp(): void {
   console.log(`
 koishi-plugin-video-parser-all CLI — 像 you-get 一样解析/下载视频
@@ -81,7 +87,7 @@ koishi-plugin-video-parser-all CLI — 像 you-get 一样解析/下载视频
   video-parser <url> [选项]
 
 选项:
-  -d, --download         下载视频/图集/封面/音乐到本地
+  -d, --download         下载视频/图集/封面/音乐到本地（多视频推文全量下载）
   -i, --info             仅显示信息（默认行为，可不加）
   -o, --output <dir>     下载目录（默认当前目录）
   --json                 以 JSON 输出解析结果
@@ -89,9 +95,10 @@ koishi-plugin-video-parser-all CLI — 像 you-get 一样解析/下载视频
   --api-key <key>        api-new.ifphp.com 网关 API Key（配置后自动切换新网关）
   --proxy <url>          HTTP 代理，如 http://127.0.0.1:7890
   --dedicated-first      优先使用平台专属 API
-  --twitter-auth-token <t>  X 登录态 auth_token（解析需登录推文，受 CF 指纹限制）
+  --twitter-auth-token <t>  X 登录态 auth_token（解析需登录推文；TLS 指纹由 tlsget-rs 处理，随包自动安装）
   --twitter-ct0 <t>         X 登录态 ct0（与 auth_token 配对，同时用作 csrf token）
   --debug                开启调试日志
+  -v, --version          显示版本
   -h, --help             显示帮助
 
 示例:
@@ -193,7 +200,10 @@ function printInfo(p: ParsedData, type: string): void {
     p.videos.length > 1
       ? `清晰度:\n${p.videos.map((v, i) => `  [${i}] ${v.quality}${v.bit_rate ? ` (${v.bit_rate}bps)` : ''}  ${v.url}`).join('\n')}`
       : null,
-    p.video ? `视频地址: ${p.video}` : null,
+    p.video ? `视频地址: ${p.video}${p.isGif ? '（动图）' : ''}` : null,
+    p.extraVideos?.length
+      ? `更多视频 (${p.extraVideos.length}):\n${p.extraVideos.map((v, i) => `  [${i + 1}] ${v.url}${v.isGif ? '（动图）' : ''}`).join('\n')}`
+      : null,
     p.images.length ? `图集 (${p.images.length}):\n${p.images.map((u, i) => `  [${i}] ${u}`).join('\n')}` : null,
     p.live_photo.length ? `实况 (${p.live_photo.length}): ${p.live_photo.map(lp => lp.image).join(', ')}` : null,
     p.cover ? `封面: ${p.cover}` : null,
@@ -209,6 +219,11 @@ async function downloadAll(p: ParsedData, type: string, outDir: string): Promise
   if (p.video) {
     const useV = p.videos[0]?.url || p.video
     await downloadOne(useV, join(outDir, `${base}${inferExt(useV, '.mp4')}`), '视频')
+  }
+  // 多视频推文：其余视频全量下载（主视频无后缀，其余 _2 _3…）
+  for (let i = 0; i < (p.extraVideos?.length || 0); i++) {
+    const u = p.extraVideos![i].url
+    await downloadOne(u, join(outDir, `${base}_${i + 2}${inferExt(u, '.mp4')}`), `视频 ${i + 2}/${p.extraVideos!.length + 1}`)
   }
   if (p.images.length) {
     for (let i = 0; i < p.images.length; i++) {

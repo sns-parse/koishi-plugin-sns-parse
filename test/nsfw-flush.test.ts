@@ -85,6 +85,49 @@ describe('flush + NSFW 端到端', () => {
     videoVault.clear()
   })
 
+  it('多视频推文 + 平台 full：每个封面单独混淆/计数，每个视频各自暂存取件', async () => {
+    const multiVideoTweet = {
+      __typename: 'Tweet',
+      text: 'two clips',
+      user: { screen_name: 'mv', name: 'MV' },
+      mediaDetails: [
+        { type: 'video', media_url_https: 'https://pbs.twimg.com/p1.jpg', video_info: { duration_millis: 5100, variants: [{ bitrate: 832000, content_type: 'video/mp4', url: 'https://video.twimg.com/v1.mp4' }] } },
+        { type: 'video', media_url_https: 'https://pbs.twimg.com/p2.jpg', video_info: { duration_millis: 3200, variants: [{ bitrate: 632000, content_type: 'video/mp4', url: 'https://video.twimg.com/v2.mp4' }] } },
+      ],
+    }
+    const rt = nsfwRt({
+      nsfwPlatformMode: { twitter: 'full' },
+      nsfwPolicy: { imageAction: 'scramble', videoAction: 'redeem', tokenHintText: '已混淆 ${count} 张图片' },
+      gifConvertEnabled: false,
+    })
+    rt.http = {
+      get: async (url: string) => {
+        if (url.includes('syndication')) return { data: multiVideoTweet }
+        return { data: PNG_BUF }
+      },
+    } as any
+    const session = mockSession({ userId: 'req1' })
+    await flush(rt, session as any, [{ type: 'twitter', url: 'https://x.com/mv/status/9', id: '9' }])
+    // 无视频/封面原图外发
+    const els = sentElements(session._sent)
+    expect(els.some(e => e?.type === 'video')).toBe(false)
+    expect(els.some(e => e?.type === 'img' && !String(e.attrs?.src ?? '').startsWith('SCR'))).toBe(false)
+    // 首条：两个封面都计入混淆数量
+    const firstTexts = sentTexts([session._sent[0]]).join('\n')
+    expect(firstTexts).toContain('已混淆 2 张图片')
+    // 每个封面一条「解混淆」消息
+    const scramMsgs = session._sent.filter((m: any) => Array.isArray(m)
+      && m.some((e: any) => e?.type === 'text' && /^解混淆 \S+/.test(e.attrs?.content ?? '')))
+    expect(scramMsgs.length).toBe(2)
+    // 每个视频各自的「取视频」消息
+    const redeemMsgs = session._sent.filter((m: any) => Array.isArray(m)
+      && m.some((e: any) => e?.type === 'text' && /^取视频 \S+/.test(e.attrs?.content ?? '')))
+    expect(redeemMsgs.length).toBe(2)
+    const { videoVault } = await import('../src/services/nsfw/vault')
+    expect(videoVault.size).toBeGreaterThanOrEqual(2)
+    videoVault.clear()
+  })
+
   it('去重层①：同消息相同 URL 只解析一次', async () => {
     let calls = 0
     const rt = nsfwRt({}, {})

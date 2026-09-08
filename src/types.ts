@@ -29,8 +29,8 @@ export interface ParsedData {
   admire: number
   /** 推文动图（animated_gif）：True 时可按配置转 GIF 发送 */
   isGif?: boolean
-  /** 多视频推文的其余视频（第一个在 video 字段；每项带自身 isGif/时长） */
-  extraVideos?: { url: string; isGif?: boolean; duration?: number }[]
+  /** 多视频推文的其余视频（第一个在 video 字段；每项带自身 isGif/时长/封面） */
+  extraVideos?: { url: string; isGif?: boolean; duration?: number; cover?: string }[]
 }
 
 export interface LinkMatch {

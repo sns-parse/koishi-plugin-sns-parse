@@ -62,11 +62,16 @@ async function processItem(rt: ParserRuntime, session: any, platform: string, te
     })
   }
 
-  // 多视频推文：其余视频逐条过 gate 与 GIF 转换
+  // 多视频推文：其余视频逐条过 gate 与 GIF 转换；封面单独审核、随行展示，视频判定用各自封面
   const extraVideos: VideoOutcome[] = []
   const extraGifs: (Buffer | null)[] = []
+  const extraCovers: (ImageOutcome | null)[] = []
   for (const ev of parsed.extraVideos || []) {
-    const outcome = await processVideo(rt, platform, ev.url, parsed.cover || '', { title: parsed.title, author: parsed.author, requesterId })
+    const evCover = ev.cover || parsed.cover || ''
+    extraCovers.push(evCover
+      ? await processImage(rt, platform, evCover, 'cover')
+      : null)
+    const outcome = await processVideo(rt, platform, ev.url, evCover, { title: parsed.title, author: parsed.author, requesterId })
     extraVideos.push(outcome)
     if (ev.isGif && outcome.kind === 'raw' && outcome.url && rt.config.gifConvertEnabled !== false) {
       extraGifs.push(await mp4ToGif(rt, outcome.url, ev.duration || 0, {
@@ -79,7 +84,7 @@ async function processItem(rt: ParserRuntime, session: any, platform: string, te
     }
   }
 
-  return { text, parsed, images, avatar, cover, video, gif, extraVideos, extraGifs }
+  return { text, parsed, images, avatar, cover, video, gif, extraVideos, extraGifs, extraCovers }
 }
 
 export async function flush(rt: ParserRuntime, session: any, matches: LinkMatch[], opts: FlushOptions = {}) {

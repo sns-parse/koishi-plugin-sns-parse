@@ -90,6 +90,10 @@ describe('flush 端到端（mock session + mock http，无需 Koishi bot）', ()
     expect(videos).toHaveLength(2)
     const srcs = videos.map((v: any) => v.attrs?.src).sort()
     expect(srcs).toEqual(['https://video.twimg.com/v1.mp4', 'https://video.twimg.com/v2.mp4'])
+    // 每个视频的封面都进概述区（主封面 p1 + 额外封面 p2）
+    const all = JSON.stringify(session._sent)
+    expect(all).toContain('p1.jpg')
+    expect(all).toContain('p2.jpg')
   })
 
   it('图集：图片以独立消息发送', async () => {
