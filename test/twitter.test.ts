@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseTwitter } from '../src/platforms/twitter'
+import { parseTwitter, fetchGrokTranslation } from '../src/platforms/twitter'
 import { fetchApi, parseUrl } from '../src/engine/fetcher'
 import { makeRuntime, mockHttp } from './helpers'
 
@@ -28,6 +28,49 @@ const videoTweet = {
     ],
   },
 }
+
+describe('fetchGrokTranslation — X 原生 Grok 翻译', () => {
+  it('构造含 grok 开关的请求并解析译文', async () => {
+    let captured: any
+    const get = async (url: string, opts: any) => {
+      captured = { url, opts }
+      return {
+        status: 200,
+        data: { data: { tweetResult: { result: { grok_translated_post_with_availability: {
+          is_available: true,
+          data: { translation: '左边：东京警察的招募海报。', source_language: 'fr', destination_language: 'zh' },
+        } } } } },
+      }
+    }
+    const r = await fetchGrokTranslation('https://x.com/u/status/123', 'zh', { authToken: 'a', ct0: 'c' }, get)
+    expect(r?.text).toContain('东京警察')
+    expect(r?.sourceLang).toBe('fr')
+    expect(captured.url).toContain('responsive_web_grok_show_grok_translated_post%22%3Atrue')
+    expect(captured.url).toContain('fieldToggles=')
+    expect(captured.opts.headers['x-twitter-client-language']).toBe('zh-cn')
+    expect(captured.opts.cookies).toEqual({ auth_token: 'a', ct0: 'c' })
+  })
+
+  it('目标语言映射 client-language（zh-TW → zh-tw，en → en）', async () => {
+    const seen: string[] = []
+    const get = async (_u: string, opts: any) => {
+      seen.push(opts.headers['x-twitter-client-language'])
+      return { status: 404, data: {} }
+    }
+    await fetchGrokTranslation('https://x.com/u/status/1', 'zh-TW', { authToken: 'a', ct0: 'c' }, get)
+    await fetchGrokTranslation('https://x.com/u/status/1', 'en', { authToken: 'a', ct0: 'c' }, get)
+    expect(seen).toEqual(['zh-tw', 'en'])
+  })
+
+  it('is_available=false / 非200 / 网络异常 → null（回落通用翻译）', async () => {
+    const unavailable = async () => ({ status: 200, data: { data: { tweetResult: { result: { grok_translated_post_with_availability: { is_available: false, data: {} } } } } } })
+    expect(await fetchGrokTranslation('https://x.com/u/status/1', 'zh', { authToken: 'a', ct0: 'c' }, unavailable)).toBeNull()
+    const forbidden = async () => ({ status: 403, data: {} })
+    expect(await fetchGrokTranslation('https://x.com/u/status/1', 'zh', { authToken: 'a', ct0: 'c' }, forbidden)).toBeNull()
+    const throws = async () => { throw new Error('net') }
+    expect(await fetchGrokTranslation('https://x.com/u/status/1', 'zh', { authToken: 'a', ct0: 'c' }, throws)).toBeNull()
+  })
+})
 
 describe('parseTwitter — X 原生 syndication 解析', () => {
   it('从链接提取推文 ID', async () => {

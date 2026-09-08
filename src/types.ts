@@ -35,6 +35,8 @@ export interface ParsedData {
   lang?: string
   /** 外语推文译文（tweetTranslate 开启时填充，经 ${翻译} 展示） */
   translation?: string
+  /** 译文提供方（Grok / Google / MyMemory），随译文一起展示 */
+  translationProvider?: string
 }
 
 export interface LinkMatch {

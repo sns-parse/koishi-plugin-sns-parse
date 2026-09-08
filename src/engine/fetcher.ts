@@ -6,7 +6,7 @@ import { delay, getErrorMessage } from '../utils/common'
 import { generateFormattedText } from '../utils/format'
 import { parseApiResponse } from './parser'
 import { getPlatformConfig, buildAuthHeaders } from '../platforms/custom'
-import { parseTwitter } from '../platforms/twitter'
+import { parseTwitter, fetchGrokTranslation } from '../platforms/twitter'
 import { shouldSkipTranslate, translateText } from '../utils/translate'
 import { NEW_GATEWAY_PRIMARY, LEGACY_GATEWAY_PRIMARY, LEGACY_GATEWAY_BACKUP } from '../platforms/dedicated-apis'
 
@@ -28,12 +28,28 @@ export async function fetchApi(rt: ParserRuntime, url: string, type: string, fie
       ? { authToken: String(config.twitterAuthToken), ct0: String(config.twitterCt0) }
       : undefined
     const parsed = await parseTwitter(url, http, twCreds)
-    // 推文翻译：目标语种与推文语种相同时跳过；失败不影响发送
+    // 推文翻译：目标语种与推文语种相同时跳过；Grok（需登录态）优先，通用翻译兜底
     if (config.tweetTranslateEnabled && parsed.desc) {
       const target = config.tweetTranslateLang || 'zh'
       if (!shouldSkipTranslate(parsed.lang, target)) {
-        const translated = await translateText(rt, parsed.desc, target, parsed.lang)
-        if (translated) parsed.translation = translated
+        let translated: string | null = null
+        let provider = ''
+        if (twCreds) {
+          const grok = await fetchGrokTranslation(url, target, twCreds).catch(() => null)
+          if (grok) {
+            translated = grok.text
+            provider = 'Grok'
+            if (!parsed.lang && grok.sourceLang) parsed.lang = grok.sourceLang
+          }
+        }
+        if (!translated) {
+          const generic = await translateText(rt, parsed.desc, target, parsed.lang)
+          if (generic) { translated = generic.text; provider = generic.provider }
+        }
+        if (translated) {
+          parsed.translation = translated
+          parsed.translationProvider = provider
+        }
       }
     }
     urlCacheLocal.set(cacheKey, { data: parsed, expire: Date.now() + cacheTTL })

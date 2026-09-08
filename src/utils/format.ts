@@ -1,4 +1,5 @@
 import type { ParsedData } from '../types'
+import { langName } from './translate'
 
 const formatVarRegex = /\$\{([^}]+)\}/g
 
@@ -40,6 +41,9 @@ export function generateFormattedText(p: ParsedData, format: string, index?: num
     '音乐标题': p.music.title || '',
     '音乐作者': p.music.author || '',
     '翻译': p.translation || '',
+    // 原文语言与提供方仅在有译文时展示（同一行变量全空则整行隐藏）
+    '原文语言': p.translation ? langName(p.lang) : '',
+    '翻译提供方': p.translationProvider || '',
   }
 
   const lines = format.split('\n')

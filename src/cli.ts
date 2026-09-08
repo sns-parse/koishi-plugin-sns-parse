@@ -10,6 +10,7 @@ import { getPlatformConfig } from './platforms/custom'
 import { parseUrl } from './engine/fetcher'
 import { generateFormattedText, formatDuration, formatPublishTime } from './utils/format'
 import { setVerboseLogging, debugLog } from './utils/logger'
+import { langName } from './utils/translate'
 import { shutdownTlsClient } from './utils/tls-client'
 import type { Context } from 'koishi'
 import type { ParsedData } from './types'
@@ -191,7 +192,7 @@ function printInfo(p: ParsedData, type: string): void {
     line('标题', p.title),
     line('作者', p.author ? `${p.author}${p.uid ? ` (ID: ${p.uid})` : ''}` : ''),
     line('简介', p.desc),
-    line('翻译', p.translation),
+    p.translation ? `翻译（${p.translationProvider || '?'}，${langName(p.lang) || '?'}）：${p.translation}` : null,
     line('时长', p.duration > 0 ? formatDuration(p.duration) : ''),
     line('发布时间', p.publishTime ? formatPublishTime(p.publishTime) : ''),
     ['点赞', '评论', '收藏', '转发', '播放'].map((n, i) => {

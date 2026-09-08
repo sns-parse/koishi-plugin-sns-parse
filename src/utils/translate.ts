@@ -20,12 +20,36 @@ export function shouldSkipTranslate(tweetLang: string | undefined, target: strin
   return l === t
 }
 
+/** 常见语种代码 → 中文名（未知代码原样展示） */
+const LANG_NAMES: Record<string, string> = {
+  fr: '法语', ja: '日语', ko: '韩语', en: '英语', zh: '中文', es: '西班牙语', pt: '葡萄牙语',
+  de: '德语', ru: '俄语', ar: '阿拉伯语', it: '意大利语', th: '泰语', vi: '越南语',
+  id: '印尼语', tr: '土耳其语', nl: '荷兰语', pl: '波兰语', hi: '印地语', uk: '乌克兰语',
+  sv: '瑞典语', no: '挪威语', fi: '芬兰语', da: '丹麦语', cs: '捷克语', ro: '罗马尼亚语',
+  hu: '匈牙利语', el: '希腊语', he: '希伯来语', fa: '波斯语', ur: '乌尔都语', ms: '马来语',
+  tl: '菲律宾语', ca: '加泰罗尼亚语', bg: '保加利亚语', hr: '克罗地亚语', sr: '塞尔维亚语',
+}
+
+export function langName(code?: string): string {
+  if (!code) return ''
+  const base = code.toLowerCase().split('-')[0]
+  if (base === 'und') return ''
+  return LANG_NAMES[base] || code
+}
+
+export interface TranslateResult {
+  text: string
+  provider: 'Google' | 'MyMemory'
+}
+
 /** 翻译文本；失败返回 null（调用方保持无译文继续发送）。gtx 优先，MyMemory 兜底 */
-export async function translateText(rt: ParserRuntime, text: string, target: string, sourceLang?: string): Promise<string | null> {
+export async function translateText(rt: ParserRuntime, text: string, target: string, sourceLang?: string): Promise<TranslateResult | null> {
   if (!text) return null
   const out = await viaGtx(rt, text, target)
-  if (out) return out
-  return viaMyMemory(rt, text, target, sourceLang)
+  if (out) return { text: out, provider: 'Google' }
+  const backup = await viaMyMemory(rt, text, target, sourceLang)
+  if (backup) return { text: backup, provider: 'MyMemory' }
+  return null
 }
 
 /** Google gtx 免费端点（无 Key；sl=auto 自动检测源语种） */

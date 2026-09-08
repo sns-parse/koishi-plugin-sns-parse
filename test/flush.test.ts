@@ -71,7 +71,7 @@ describe('flush 端到端（mock session + mock http，无需 Koishi bot）', ()
       photos: [{ url: 'https://pbs.twimg.com/p.jpg' }],
     }
     const rt = makeRuntime({
-      config: { tweetTranslateEnabled: true, tweetTranslateLang: 'zh', unifiedMessageFormat: '简介：${简介}\n翻译：${翻译}\n作者：${作者}' },
+      config: { tweetTranslateEnabled: true, tweetTranslateLang: 'zh', unifiedMessageFormat: '简介：${简介}\n翻译（${翻译提供方}，${原文语言}）：${翻译}\n作者：${作者}' },
       http: mockHttp((url: string) => {
         if (url.includes('syndication')) return frTweet
         if (url.includes('translate_a/single')) {
@@ -84,7 +84,7 @@ describe('flush 端到端（mock session + mock http，无需 Koishi bot）', ()
     await flush(rt, session as any, [{ type: 'twitter', url: 'https://x.com/fr/status/7', id: '7' }])
     const texts = sentTexts(session._sent).join('\n')
     expect(texts).toContain('Bonjour le monde')
-    expect(texts).toContain('你好，世界')
+    expect(texts).toContain('翻译（Google，法语）：你好，世界')
   })
 
   it('推文翻译：目标语种与推文语种相同则不调用翻译', async () => {
