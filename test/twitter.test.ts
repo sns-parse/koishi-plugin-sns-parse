@@ -81,6 +81,34 @@ describe('parseTwitter — X 原生 syndication 解析', () => {
     expect(v.isGif).toBeUndefined()
   })
 
+  it('多视频推文：第一个进 video，其余进 extraVideos（带各自时长）', async () => {
+    const multiVideoTweet = {
+      __typename: 'Tweet',
+      text: 'two clips',
+      user: { screen_name: 'mv', name: 'MV' },
+      mediaDetails: [
+        {
+          type: 'video',
+          media_url_https: 'https://pbs.twimg.com/p1.jpg',
+          video_info: { duration_millis: 5100, variants: [{ bitrate: 832000, content_type: 'video/mp4', url: 'https://video.twimg.com/v1.mp4' }] },
+        },
+        {
+          type: 'animated_gif',
+          media_url_https: 'https://pbs.twimg.com/p2.jpg',
+          video_info: { duration_millis: 3200, variants: [{ bitrate: 632000, content_type: 'video/mp4', url: 'https://video.twimg.com/v2.mp4' }] },
+        },
+      ],
+    }
+    const t = await parseTwitter('https://x.com/u/status/2', mockHttp(multiVideoTweet))
+    expect(t.video).toBe('https://video.twimg.com/v1.mp4')
+    expect(t.duration).toBe(5)
+    expect(t.isGif).toBeUndefined()
+    expect(t.extraVideos).toHaveLength(1)
+    expect(t.extraVideos![0].url).toBe('https://video.twimg.com/v2.mp4')
+    expect(t.extraVideos![0].isGif).toBe(true)
+    expect(t.extraVideos![0].duration).toBe(3)
+  })
+
   it('tombstone（需登录/已删除）：抛出明确错误', async () => {
     const tomb = { __typename: 'TweetWithVisibilityResults', tombstone: { text: '__FIXME__LYNCHED__FIXME__' } }
     await expect(parseTwitter('https://x.com/u/status/2059244332285313260', mockHttp(tomb as any)))

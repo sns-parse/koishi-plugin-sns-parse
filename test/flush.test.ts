@@ -62,6 +62,36 @@ describe('flush 端到端（mock session + mock http，无需 Koishi bot）', ()
     expect(sentElements(session._sent).some(e => e?.type === 'video')).toBe(true)
   })
 
+  it('多视频推文：两条视频各自独立发送', async () => {
+    const multiVideoTweet = {
+      __typename: 'Tweet',
+      text: 'two clips',
+      user: { screen_name: 'mv', name: 'MV' },
+      mediaDetails: [
+        {
+          type: 'video',
+          media_url_https: 'https://pbs.twimg.com/p1.jpg',
+          video_info: { duration_millis: 5100, variants: [{ bitrate: 832000, content_type: 'video/mp4', url: 'https://video.twimg.com/v1.mp4' }] },
+        },
+        {
+          type: 'video',
+          media_url_https: 'https://pbs.twimg.com/p2.jpg',
+          video_info: { duration_millis: 3200, variants: [{ bitrate: 632000, content_type: 'video/mp4', url: 'https://video.twimg.com/v2.mp4' }] },
+        },
+      ],
+    }
+    const rt = makeRuntime({
+      config: { gifConvertEnabled: false },
+      http: mockHttp(multiVideoTweet),
+    })
+    const session = mockSession()
+    await flush(rt, session as any, [{ type: 'twitter', url: 'https://x.com/mv/status/2', id: '2' }])
+    const videos = sentElements(session._sent).filter(e => e?.type === 'video')
+    expect(videos).toHaveLength(2)
+    const srcs = videos.map((v: any) => v.attrs?.src).sort()
+    expect(srcs).toEqual(['https://video.twimg.com/v1.mp4', 'https://video.twimg.com/v2.mp4'])
+  })
+
   it('图集：图片以独立消息发送', async () => {
     const rt = makeRuntime({
       http: mockHttp({ code: 200, data: { title: '图文标题', images: ['https://x/1.jpg', 'https://x/2.jpg'] } }),

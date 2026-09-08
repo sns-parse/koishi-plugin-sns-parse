@@ -62,7 +62,24 @@ async function processItem(rt: ParserRuntime, session: any, platform: string, te
     })
   }
 
-  return { text, parsed, images, avatar, cover, video, gif }
+  // 多视频推文：其余视频逐条过 gate 与 GIF 转换
+  const extraVideos: VideoOutcome[] = []
+  const extraGifs: (Buffer | null)[] = []
+  for (const ev of parsed.extraVideos || []) {
+    const outcome = await processVideo(rt, platform, ev.url, parsed.cover || '', { title: parsed.title, author: parsed.author, requesterId })
+    extraVideos.push(outcome)
+    if (ev.isGif && outcome.kind === 'raw' && outcome.url && rt.config.gifConvertEnabled !== false) {
+      extraGifs.push(await mp4ToGif(rt, outcome.url, ev.duration || 0, {
+        maxWidth: rt.config.gifMaxWidth || 480,
+        fps: rt.config.gifFps || 15,
+        maxDurationSec: rt.config.gifMaxDurationSec || 15,
+      }))
+    } else {
+      extraGifs.push(null)
+    }
+  }
+
+  return { text, parsed, images, avatar, cover, video, gif, extraVideos, extraGifs }
 }
 
 export async function flush(rt: ParserRuntime, session: any, matches: LinkMatch[], opts: FlushOptions = {}) {

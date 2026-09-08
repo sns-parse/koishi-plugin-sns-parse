@@ -28,6 +28,9 @@ export interface ProcessedItem {
   video: VideoOutcome
   /** 推文动图转 GIF 的成品（转换失败为 null，回退发视频） */
   gif?: Buffer | null
+  /** 多视频推文的其余视频及其 GIF 成品（与 extraVideos 一一对应） */
+  extraVideos?: VideoOutcome[]
+  extraGifs?: (Buffer | null)[]
 }
 
 /** 一个待发送的语义单元 */
@@ -95,6 +98,19 @@ export function buildUnits(rt: ParserRuntime, item: ProcessedItem): MessageUnit[
     push([h.image(item.gif, 'image/gif')], false)
   } else if (p.video && p.type !== 'live' && p.type !== 'live_photo' && item.video.kind === 'raw' && item.video.url) {
     push([config.showVideoFile !== false ? h.video(item.video.url) : h.text(`视频链接：${item.video.url}`)], false)
+  }
+
+  // ⑥b 多视频推文：其余视频逐条独立发送（动图转 GIF 优先，受限降级链接）
+  for (let i = 0; i < (item.extraVideos?.length || 0); i++) {
+    const ev = item.extraVideos![i]
+    const eg = item.extraGifs?.[i]
+    if (eg) {
+      push([h.image(eg, 'image/gif')], false)
+    } else if (ev.kind === 'raw' && ev.url) {
+      push([config.showVideoFile !== false ? h.video(ev.url) : h.text(`视频链接：${ev.url}`)], false)
+    } else if (ev.kind === 'link' && ev.url) {
+      push([h.text(`视频链接：${ev.url}`)], true)
+    }
   }
 
   // ⑦ 音乐语音

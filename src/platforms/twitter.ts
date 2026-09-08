@@ -100,11 +100,15 @@ function extractSyndicationMedia(tw: any, p: ParsedData): void {
         const vs = normalizeVariants(m.video_info.variants)
         if (vs.length) {
           p.videos.push(...vs)
+          const dur = m.video_info.duration_millis ? Math.floor(Number(m.video_info.duration_millis) / 1000) : 0
           if (!p.video) {
             p.video = vs[0].url
             p.cover = String(pick(m.media_url_https, p.cover))
-            if (m.video_info.duration_millis) p.duration = Math.floor(Number(m.video_info.duration_millis) / 1000)
+            if (dur) p.duration = dur
             if (m.type === 'animated_gif') p.isGif = true
+          } else {
+            // 多视频推文：其余视频逐条携带（发送层每条独立发送）
+            ;(p.extraVideos ||= []).push({ url: vs[0].url, isGif: m.type === 'animated_gif', duration: dur })
           }
         }
       }
@@ -189,11 +193,14 @@ function mapGraphql(rawResult: any): ParsedData {
         .sort((a: VideoQuality, b: VideoQuality) => (b.bit_rate || 0) - (a.bit_rate || 0))
       if (vs.length) {
         p.videos.push(...vs)
+        const dur = m.video_info.duration_millis ? Math.floor(Number(m.video_info.duration_millis) / 1000) : 0
         if (!p.video) {
           p.video = vs[0].url
           p.cover = String(pick(m.media_url_https, p.cover))
-          if (m.video_info.duration_millis) p.duration = Math.floor(Number(m.video_info.duration_millis) / 1000)
+          if (dur) p.duration = dur
           if (m.type === 'animated_gif') p.isGif = true
+        } else {
+          ;(p.extraVideos ||= []).push({ url: vs[0].url, isGif: m.type === 'animated_gif', duration: dur })
         }
       }
     }
