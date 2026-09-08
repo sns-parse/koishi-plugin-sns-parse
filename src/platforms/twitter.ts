@@ -154,6 +154,7 @@ function mapSyndication(tw: any): ParsedData {
   const cleaned = cleanDesc(text)
   p.title = cleaned.slice(0, 100)
   p.desc = cleaned
+  p.lang = tw.lang ? String(tw.lang) : undefined
   p.author = String(pick(user.name, user.screen_name, ''))
   p.uid = String(pick(user.screen_name, user.id_str, ''))
   p.avatar = String(pick(user.profile_image_url_https, user.profile_image_url, ''))
@@ -216,6 +217,7 @@ function mapGraphql(rawResult: any): ParsedData {
   const cleaned = cleanDesc(text)
   p.title = cleaned.slice(0, 100)
   p.desc = cleaned
+  p.lang = legacy.lang ? String(legacy.lang) : undefined
   p.author = String(pick(ulegacy.name, ulegacy.screen_name, ''))
   p.uid = String(pick(ulegacy.screen_name, user?.rest_id, ''))
   p.avatar = String(pick(ulegacy.profile_image_url_https, ''))

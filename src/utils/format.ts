@@ -39,6 +39,7 @@ export function generateFormattedText(p: ParsedData, format: string, index?: num
     '作者ID': p.uid,
     '音乐标题': p.music.title || '',
     '音乐作者': p.music.author || '',
+    '翻译': p.translation || '',
   }
 
   const lines = format.split('\n')

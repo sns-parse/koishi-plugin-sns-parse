@@ -31,6 +31,10 @@ export interface ParsedData {
   isGif?: boolean
   /** 多视频推文的其余视频（第一个在 video 字段；每项带自身 isGif/时长/封面） */
   extraVideos?: { url: string; isGif?: boolean; duration?: number; cover?: string }[]
+  /** 推文语种（BCP-47 短码，如 fr/zh/und），供翻译跳过判定 */
+  lang?: string
+  /** 外语推文译文（tweetTranslate 开启时填充，经 ${翻译} 展示） */
+  translation?: string
 }
 
 export interface LinkMatch {

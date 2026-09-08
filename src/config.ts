@@ -43,8 +43,8 @@ export const Config = Schema.intersect([
 
   Schema.object({
     unifiedMessageFormat: Schema.string().role('textarea').default(
-      '标题：${标题}\n作者：${作者}\n简介：${简介}\n音乐标题：${音乐标题}\n音乐作者：${音乐作者}\n点赞：${点赞数}\n收藏：${收藏数}\n转发：${转发数}\n播放：${播放数}\n评论：${评论数}\n图片数量：${图片数量}'
-    ).description('消息文字模板，可用变量：${标题} ${作者} ${简介} ${视频时长} ${点赞数} ${收藏数} ${转发数} ${播放数} ${评论数} ${发布时间} ${图片数量} ${作者ID} ${音乐标题} ${音乐作者}（空行自动隐藏）'),
+      '标题：${标题}\n作者：${作者}\n简介：${简介}\n翻译：${翻译}\n音乐标题：${音乐标题}\n音乐作者：${音乐作者}\n点赞：${点赞数}\n收藏：${收藏数}\n转发：${转发数}\n播放：${播放数}\n评论：${评论数}\n图片数量：${图片数量}'
+    ).description('消息文字模板，可用变量：${标题} ${作者} ${简介} ${翻译} ${视频时长} ${点赞数} ${收藏数} ${转发数} ${播放数} ${评论数} ${发布时间} ${图片数量} ${作者ID} ${音乐标题} ${音乐作者}（空行自动隐藏）'),
   }).description('消息格式'),
 
   Schema.object({
@@ -252,6 +252,19 @@ export const Config = Schema.intersect([
     ).description('全局字段映射 JSON'),
     twitterAuthToken: Schema.string().default('').role('secret').description('X 登录态 auth_token（解析需登录推文用，受 Cloudflare 指纹限制可能 403）'),
     twitterCt0: Schema.string().default('').role('secret').description('X 登录态 ct0（与 auth_token 配对）'),
+    tweetTranslateEnabled: Schema.boolean().default(false).description('外语推文自动翻译（附译文行；需网络可达 translate.googleapis.com，可配代理）'),
+    tweetTranslateLang: Schema.union([
+      Schema.const('zh').description('简体中文'),
+      Schema.const('zh-TW').description('繁體中文'),
+      Schema.const('en').description('English'),
+      Schema.const('ja').description('日本語'),
+      Schema.const('ko').description('한국어'),
+      Schema.const('fr').description('Français'),
+      Schema.const('de').description('Deutsch'),
+      Schema.const('ru').description('Русский'),
+      Schema.const('es').description('Español'),
+      Schema.const('pt').description('Português'),
+    ]).default('zh').description('翻译目标语言'),
     apiKey: Schema.string().default('').role('secret').description('新网关 API Key（https://api-new.ifphp.com/auth/login 注册获取；留空用旧网关）'),
   }).description('API 与平台'),
 

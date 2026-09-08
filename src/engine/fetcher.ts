@@ -7,6 +7,7 @@ import { generateFormattedText } from '../utils/format'
 import { parseApiResponse } from './parser'
 import { getPlatformConfig, buildAuthHeaders } from '../platforms/custom'
 import { parseTwitter } from '../platforms/twitter'
+import { shouldSkipTranslate, translateText } from '../utils/translate'
 import { NEW_GATEWAY_PRIMARY, LEGACY_GATEWAY_PRIMARY, LEGACY_GATEWAY_BACKUP } from '../platforms/dedicated-apis'
 
 export async function fetchApi(rt: ParserRuntime, url: string, type: string, fieldMapping?: Record<string, string>, platformConf?: any): Promise<ParsedData> {
@@ -27,6 +28,14 @@ export async function fetchApi(rt: ParserRuntime, url: string, type: string, fie
       ? { authToken: String(config.twitterAuthToken), ct0: String(config.twitterCt0) }
       : undefined
     const parsed = await parseTwitter(url, http, twCreds)
+    // 推文翻译：目标语种与推文语种相同时跳过；失败不影响发送
+    if (config.tweetTranslateEnabled && parsed.desc) {
+      const target = config.tweetTranslateLang || 'zh'
+      if (!shouldSkipTranslate(parsed.lang, target)) {
+        const translated = await translateText(rt, parsed.desc, target, parsed.lang)
+        if (translated) parsed.translation = translated
+      }
+    }
     urlCacheLocal.set(cacheKey, { data: parsed, expire: Date.now() + cacheTTL })
     return parsed
   }

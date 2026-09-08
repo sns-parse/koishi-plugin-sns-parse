@@ -25,7 +25,7 @@ const DEFAULT_GLOBAL_FIELD_MAPPING = JSON.stringify({
   music_cover: 'data.music.cover', music_url: 'data.music.url',
 })
 
-const DEFAULT_UNIFIED_FORMAT = '标题：${标题}\n作者：${作者}\n简介：${简介}\n点赞：${点赞数}\n收藏：${收藏数}\n转发：${转发数}\n播放：${播放数}\n评论：${评论数}'
+const DEFAULT_UNIFIED_FORMAT = '标题：${标题}\n作者：${作者}\n简介：${简介}\n翻译：${翻译}\n点赞：${点赞数}\n收藏：${收藏数}\n转发：${转发数}\n播放：${播放数}\n评论：${评论数}'
 
 interface CliArgs {
   url: string
@@ -191,6 +191,7 @@ function printInfo(p: ParsedData, type: string): void {
     line('标题', p.title),
     line('作者', p.author ? `${p.author}${p.uid ? ` (ID: ${p.uid})` : ''}` : ''),
     line('简介', p.desc),
+    line('翻译', p.translation),
     line('时长', p.duration > 0 ? formatDuration(p.duration) : ''),
     line('发布时间', p.publishTime ? formatPublishTime(p.publishTime) : ''),
     ['点赞', '评论', '收藏', '转发', '播放'].map((n, i) => {
