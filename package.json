@@ -1,7 +1,7 @@
 {
-  "name": "@char46/koishi-plugin-video-parser-all",
-  "description": "Koishi 全平台视频/图集解析插件，支持抖音/快手/B站/微博/小红书/YouTube/TikTok等20+平台",
-  "version": "1.19.0",
+  "name": "@sns-parse/koishi-plugin-sns-parse",
+  "description": "Koishi 全平台视频/图集解析插件（sns-parse 分层架构的 Koishi 兼容层），支持抖音/快手/B站/微博/小红书/YouTube/TikTok/X 等 27+ 平台",
+  "version": "1.20.0-alpha.1+upstream.1.6.7",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "bin": {
@@ -139,12 +139,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/char-46/koishi-plugin-video-parser-all.git"
+    "url": "git+https://github.com/sns-parse/koishi-plugin-sns-parse.git"
   },
   "bugs": {
-    "url": "https://github.com/char-46/koishi-plugin-video-parser-all/issues"
+    "url": "https://github.com/sns-parse/koishi-plugin-sns-parse/issues"
   },
-  "homepage": "https://github.com/char-46/koishi-plugin-video-parser-all#readme",
+  "homepage": "https://github.com/sns-parse/koishi-plugin-sns-parse#readme",
   "engines": {
     "node": ">=16.0.0"
   }

@@ -2,7 +2,7 @@ import { Schema } from 'koishi'
 import { SendStrategyConfig } from './services/nsfw/config'
 import { contributionsToSchema, collectConfigContributions } from './config-dynamic'
 
-export const name = 'video-parser-all'
+export const name = 'sns-parse'
 
 export const Config = Schema.intersect([
   Schema.object({
