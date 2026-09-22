@@ -1,5 +1,6 @@
 import { Schema } from 'koishi'
-import { NsfwConfig, SendStrategyConfig } from './services/nsfw/config'
+import { SendStrategyConfig } from './services/nsfw/config'
+import { contributionsToSchema, collectConfigContributions } from './config-dynamic'
 
 export const name = 'video-parser-all'
 
@@ -10,35 +11,6 @@ export const Config = Schema.intersect([
     showWaitingTip: Schema.boolean().default(true).description('显示等待提示'),
     debug: Schema.boolean().default(false).description('调试模式：将 debug/verbose 级别日志提升为 info 输出'),
     enableDiagCommand: Schema.boolean().default(false).description('启用 parse/diag 环境诊断命令'),
-    platformEnabled: Schema.object({
-      bilibili: Schema.boolean().default(true).description('哔哩哔哩'),
-      douyin: Schema.boolean().default(true).description('抖音'),
-      kuaishou: Schema.boolean().default(true).description('快手'),
-      xiaohongshu: Schema.boolean().default(true).description('小红书'),
-      weibo: Schema.boolean().default(true).description('微博'),
-      xigua: Schema.boolean().default(true).description('西瓜视频'),
-      youtube: Schema.boolean().default(true).description('YouTube'),
-      tiktok: Schema.boolean().default(true).description('TikTok'),
-      acfun: Schema.boolean().default(true).description('AcFun（A站）'),
-      zhihu: Schema.boolean().default(true).description('知乎'),
-      weishi: Schema.boolean().default(true).description('微视'),
-      huya: Schema.boolean().default(true).description('虎牙'),
-      haokan: Schema.boolean().default(true).description('好看视频'),
-      meipai: Schema.boolean().default(true).description('美拍'),
-      twitter: Schema.boolean().default(true).description('Twitter/X'),
-      instagram: Schema.boolean().default(true).description('Instagram'),
-      doubao: Schema.boolean().default(true).description('豆包'),
-      doubao_image: Schema.boolean().default(true).description('豆包图片'),
-      jimeng: Schema.boolean().default(true).description('即梦'),
-      oasis: Schema.boolean().default(true).description('绿洲'),
-      wechat_channel: Schema.boolean().default(true).description('视频号'),
-      lishi: Schema.boolean().default(true).description('梨视频'),
-      quanmin: Schema.boolean().default(true).description('全民直播'),
-      pipigx: Schema.boolean().default(true).description('皮皮搞笑'),
-      pipixia: Schema.boolean().default(true).description('皮皮虾'),
-      zuiyou: Schema.boolean().default(true).description('最右'),
-      toutiao: Schema.boolean().default(true).description('今日头条'),
-    }).description('各平台解析开关'),
   }).description('基本设置'),
 
   Schema.object({
@@ -83,7 +55,8 @@ export const Config = Schema.intersect([
 
   SendStrategyConfig,
 
-  NsfwConfig,
+  // 扩展与平台声明的配置（NSFW/合并/翻译/GIF 与各平台开关等，动态生成）
+  contributionsToSchema(collectConfigContributions()),
 
   Schema.object({
     timeout: Schema.number().min(0).step(1).default(180000).description('API 请求超时 (ms)'),
@@ -126,35 +99,6 @@ export const Config = Schema.intersect([
   Schema.object({
     primaryApiUrl: Schema.string().default('https://api.bugpk.com/api/short_videos').hidden(),
     backupApiUrl: Schema.string().default('https://api.bugpk.com/api/svparse').hidden(),
-    platformDedicatedFirst: Schema.object({
-      bilibili: Schema.boolean().default(false).description('哔哩哔哩'),
-      douyin: Schema.boolean().default(false).description('抖音'),
-      kuaishou: Schema.boolean().default(false).description('快手'),
-      xiaohongshu: Schema.boolean().default(false).description('小红书'),
-      weibo: Schema.boolean().default(false).description('微博'),
-      xigua: Schema.boolean().default(false).description('西瓜视频'),
-      youtube: Schema.boolean().default(false).description('YouTube'),
-      tiktok: Schema.boolean().default(false).description('TikTok'),
-      acfun: Schema.boolean().default(false).description('AcFun（A站）'),
-      zhihu: Schema.boolean().default(false).description('知乎'),
-      weishi: Schema.boolean().default(false).description('微视'),
-      huya: Schema.boolean().default(false).description('虎牙'),
-      haokan: Schema.boolean().default(false).description('好看视频'),
-      meipai: Schema.boolean().default(false).description('美拍'),
-      twitter: Schema.boolean().default(false).description('Twitter/X'),
-      instagram: Schema.boolean().default(false).description('Instagram'),
-      doubao: Schema.boolean().default(false).description('豆包'),
-      doubao_image: Schema.boolean().default(false).description('豆包图片'),
-      jimeng: Schema.boolean().default(false).description('即梦'),
-      oasis: Schema.boolean().default(false).description('绿洲'),
-      wechat_channel: Schema.boolean().default(false).description('视频号'),
-      lishi: Schema.boolean().default(false).description('梨视频'),
-      quanmin: Schema.boolean().default(false).description('全民直播'),
-      pipigx: Schema.boolean().default(false).description('皮皮搞笑'),
-      pipixia: Schema.boolean().default(false).description('皮皮虾'),
-      zuiyou: Schema.boolean().default(false).description('最右'),
-      toutiao: Schema.boolean().default(false).description('今日头条'),
-    }).description('优先使用专属 API'),
     customApis: Schema.array(
       Schema.object({
         platform: Schema.union([
