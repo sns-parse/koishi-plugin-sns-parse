@@ -14,6 +14,8 @@ export interface TlsGetOptions {
   headers?: Record<string, string>
   cookies?: Record<string, string>
   timeout?: number
+  /** HTTP(S) 代理地址（如 http://127.0.0.1:7890），透传给 tlsget-rs 二进制 */
+  proxy?: string
 }
 
 export interface TlsResponse {
@@ -43,6 +45,7 @@ export async function tlsGet(url: string, opts: TlsGetOptions = {}): Promise<Tls
     headers: opts.headers,
     cookies: opts.cookies,
     timeoutMs: Math.max(1000, opts.timeout || 30000),
+    proxy: opts.proxy,
   })
   return { status: r.status, data: r.body }
 }

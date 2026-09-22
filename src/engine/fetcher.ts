@@ -8,6 +8,7 @@ import { parseApiResponse } from './parser'
 import { getPlatformConfig, buildAuthHeaders } from '../platforms/custom'
 import { parseTwitter, fetchGrokTranslation } from '../platforms/twitter'
 import { shouldSkipTranslate, translateText } from '../utils/translate'
+import { tlsGet } from '../utils/tls-client'
 import { NEW_GATEWAY_PRIMARY, LEGACY_GATEWAY_PRIMARY, LEGACY_GATEWAY_BACKUP } from '../platforms/dedicated-apis'
 
 export async function fetchApi(rt: ParserRuntime, url: string, type: string, fieldMapping?: Record<string, string>, platformConf?: any): Promise<ParsedData> {
@@ -27,7 +28,12 @@ export async function fetchApi(rt: ParserRuntime, url: string, type: string, fie
     const twCreds = (config.twitterAuthToken && config.twitterCt0)
       ? { authToken: String(config.twitterAuthToken), ct0: String(config.twitterCt0) }
       : undefined
-    const parsed = await parseTwitter(url, http, twCreds)
+    // 代理串通：axios 走 runtime 实例；tlsget-rs（GraphQL/Grok 翻译）显式透传代理地址
+    const tlsProxy = (proxyConfig.enabled && proxyConfig.host)
+      ? `${proxyConfig.protocol || 'http'}://${proxyConfig.auth?.username ? `${encodeURIComponent(proxyConfig.auth.username)}:${encodeURIComponent(proxyConfig.auth.password || '')}@` : ''}${proxyConfig.host}:${proxyConfig.port || 7890}`
+      : undefined
+    const tlsGetWithProxy = (u: string, o: any) => tlsGet(u, { ...o, proxy: tlsProxy })
+    const parsed = await parseTwitter(url, http, twCreds, tlsGetWithProxy)
     // 推文翻译：目标语种与推文语种相同时跳过；Grok（需登录态）优先，通用翻译兜底
     if (config.tweetTranslateEnabled && parsed.desc) {
       const target = config.tweetTranslateLang || 'zh'
@@ -35,7 +41,7 @@ export async function fetchApi(rt: ParserRuntime, url: string, type: string, fie
         let translated: string | null = null
         let provider = ''
         if (twCreds) {
-          const grok = await fetchGrokTranslation(url, target, twCreds).catch(() => null)
+          const grok = await fetchGrokTranslation(url, target, twCreds, tlsGetWithProxy).catch(() => null)
           if (grok) {
             translated = grok.text
             provider = 'Grok'
