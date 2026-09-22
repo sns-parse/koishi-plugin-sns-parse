@@ -141,10 +141,18 @@ describe('verifyLayout / detectMergeLayout（内容识别）', () => {
     // 母图 y 全程连续：piece i 覆盖 y ∈ [i*40, i*40+40)，趋势与纹理均为全局坐标函数
     const cont = [0, 1, 2].map((i) => grayBuf(40, pat(i * 40, 0, 5, 7)))
     const v: MergeLayout = { kind: 'v' }
-    expect(verifyLayout(v, cont).pass).toBe(true)
+    const ok = verifyLayout(v, cont)
+    expect(ok.pass).toBe(true)
+    // 证据链：每条接缝都带方向/比值/基线与结论文案（debug 日志消费）
+    expect(ok.seams.length).toBe(2)
+    expect(ok.seams[0].dir).toBe('V')
+    expect(ok.seams[0].reason).toContain('连续')
+    expect(ok.seams[0].baseline).toBeGreaterThan(0)
     // 无关图片：亮度分布/趋势相位/纹理函数均不同（真实无关照片的典型差异）→ 接缝不连续
     const alien = [0, 1, 2].map((i) => grayBuf(40, pat(i * 40, (i + 1) * Math.PI / 3, 3 + i * 2, 5 + i * 4, 20 + i * 55)))
-    expect(verifyLayout(v, alien).pass).toBe(false)
+    const bad = verifyLayout(v, alien)
+    expect(bad.pass).toBe(false)
+    expect(bad.seams[0].reason).toContain('不连续')
   })
   it('纯渐变（无纹理）接缝不可验证 → 拒绝', () => {
     const ramp = [0, 1, 2].map((i) => grayBuf(40, (x, y) => 40 + Math.round(x * 0.5 + (i * 40 + y) * 0.3)))

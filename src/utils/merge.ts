@@ -143,6 +143,18 @@ export interface SeamVerdict {
   /** false = 接缝不可验证（边界带平坦，无纹理可判）或不连续 */
   ok: boolean
   score: number
+  /** 证据明细（供 debug 日志） */
+  dir: 'V' | 'H'
+  from: number
+  to: number
+  /** 边界带高频纹理能量（两侧最大值；低于 TEXTURE_MIN 即不可验证） */
+  texture: number
+  /** 平滑后接缝差 */
+  trendMAD: number
+  /** 片内自然步进基线 */
+  baseline: number
+  /** 结论文案 */
+  reason: string
 }
 
 /**
@@ -152,24 +164,33 @@ export interface SeamVerdict {
  *   高频纹理逐行天然去相关、不能作匹配信号，先平滑剔除；基线取各自片内相邻对
  *   （不可跨片比较，否则无关片间差异会稀释接缝信号）。
  */
-function judgeSeam(edgeA: Float32Array, edgeB: Float32Array, innerPairs: () => [Float32Array, Float32Array][]): SeamVerdict {
+function judgeSeam(edgeA: Float32Array, edgeB: Float32Array, dir: 'V' | 'H', from: number, to: number, innerPairs: () => [Float32Array, Float32Array][]): SeamVerdict {
   const texture = Math.max(std(residual(edgeA)), std(residual(edgeB)))
-  if (texture < TEXTURE_MIN) return { ok: false, score: Infinity }
+  const mk = (ok: boolean, score: number, reason: string, trendMAD = 0, baseline = 0): SeamVerdict =>
+    ({ ok, score, dir, from, to, texture, trendMAD, baseline, reason })
+  if (texture < TEXTURE_MIN) return mk(false, Infinity, `纹理能量 ${texture.toFixed(1)} < ${TEXTURE_MIN}，平坦边缘不可验证`)
   const sA = smooth(edgeA)
   const sB = smooth(edgeB)
   const pairs = innerPairs()
   const innerTrend = pairs.map(([p, q]) => mad(smooth(p), smooth(q)))
-  const trendRef = Math.max(innerTrend.reduce((t, s) => t + s, 0) / innerTrend.length, MAD_FLOOR)
-  const score = mad(sA, sB) / trendRef
-  return { ok: score < BOUNDARY_THRESH, score }
+  const baseline = innerTrend.reduce((t, s) => t + s, 0) / innerTrend.length
+  const trendRef = Math.max(baseline, MAD_FLOOR)
+  const trendMAD = mad(sA, sB)
+  const score = trendMAD / trendRef
+  return mk(score < BOUNDARY_THRESH, score,
+    score < BOUNDARY_THRESH
+      ? `连续（趋势差 ${trendMAD.toFixed(1)} / 基线 ${trendRef.toFixed(1)} = ${score.toFixed(2)} < ${BOUNDARY_THRESH}，纹理 ${texture.toFixed(1)}）`
+      : `不连续（趋势差 ${trendMAD.toFixed(1)} / 基线 ${trendRef.toFixed(1)} = ${score.toFixed(2)} ≥ ${BOUNDARY_THRESH}，纹理 ${texture.toFixed(1)}）`,
+    trendMAD, baseline)
 }
 
 /** 垂直接缝：A 末行 vs B 首行（基线取各自片内相邻行对） */
-function seamVerdictV(a: Buffer, b: Buffer): SeamVerdict {
+function seamVerdictV(a: Buffer, b: Buffer, from: number, to: number): SeamVerdict {
   const r = grayRows(a)
   return judgeSeam(
     rowOf(a, r - 1),
     rowOf(b, 0),
+    'V', from, to,
     () => [
       [rowOf(a, r - 2), rowOf(a, r - 1)],
       [rowOf(a, r - 3), rowOf(a, r - 2)],
@@ -180,10 +201,11 @@ function seamVerdictV(a: Buffer, b: Buffer): SeamVerdict {
 }
 
 /** 水平接缝：A 末列 vs B 首列（基线取各自片内相邻列对） */
-function seamVerdictH(a: Buffer, b: Buffer): SeamVerdict {
+function seamVerdictH(a: Buffer, b: Buffer, from: number, to: number): SeamVerdict {
   return judgeSeam(
     colOf(a, GRAY_W - 1),
     colOf(b, 0),
+    'H', from, to,
     () => [
       [colOf(a, GRAY_W - 2), colOf(a, GRAY_W - 1)],
       [colOf(a, GRAY_W - 3), colOf(a, GRAY_W - 2)],
@@ -193,35 +215,57 @@ function seamVerdictH(a: Buffer, b: Buffer): SeamVerdict {
   )
 }
 
-/** 内容验证：所有接缝（趋势+纹理）均通过才成立；返回最大接缝比值（越小越像母图切片） */
-export function verifyLayout(layout: MergeLayout, grays: Buffer[]): { pass: boolean; score: number } {
-  const verdicts: SeamVerdict[] = []
+/** 内容验证：所有接缝（趋势+纹理）均通过才成立；返回最大接缝比值与逐缝证据 */
+export function verifyLayout(layout: MergeLayout, grays: Buffer[]): { pass: boolean; score: number; seams: SeamVerdict[] } {
+  const seams: SeamVerdict[] = []
   const n = grays.length
   if (layout.kind === 'v') {
-    for (let i = 0; i + 1 < n; i++) verdicts.push(seamVerdictV(grays[i], grays[i + 1]))
+    for (let i = 0; i + 1 < n; i++) seams.push(seamVerdictV(grays[i], grays[i + 1], i, i + 1))
   } else if (layout.kind === 'h') {
-    for (let i = 0; i + 1 < n; i++) verdicts.push(seamVerdictH(grays[i], grays[i + 1]))
+    for (let i = 0; i + 1 < n; i++) seams.push(seamVerdictH(grays[i], grays[i + 1], i, i + 1))
   } else {
     const { cols } = layout
     for (let i = 0; i < n; i++) {
-      if (i % cols < cols - 1 && i + 1 < n) verdicts.push(seamVerdictH(grays[i], grays[i + 1]))
-      if (i + cols < n) verdicts.push(seamVerdictV(grays[i], grays[i + cols]))
+      if (i % cols < cols - 1 && i + 1 < n) seams.push(seamVerdictH(grays[i], grays[i + 1], i, i + 1))
+      if (i + cols < n) seams.push(seamVerdictV(grays[i], grays[i + cols], i, i + cols))
     }
   }
-  if (!verdicts.length) return { pass: false, score: Infinity }
-  const worst = Math.max(...verdicts.map((v) => v.score))
-  return { pass: verdicts.every((v) => v.ok), score: worst }
+  if (!seams.length) return { pass: false, score: Infinity, seams }
+  const worst = Math.max(...seams.map((v) => v.score))
+  return { pass: seams.every((v) => v.ok), score: worst, seams }
 }
 
 /** 内容识别：候选布局逐一经接缝连续性验证，取通过者中比值最小的一个 */
 export function detectMergeLayout(sizes: ImageSize[], grays: Buffer[]): MergeLayout | null {
+  return pickMergeLayout(sizes, grays)?.layout ?? null
+}
+
+/** 布局名（日志用） */
+export function layoutName(layout: MergeLayout): string {
+  return layout.kind === 'grid' ? `网格 ${layout.cols}x${layout.rows}` : layout.kind === 'v' ? '竖堆（水平切分）' : '横拼（垂直切分）'
+}
+
+/**
+ * 候选布局逐一验证并产出证据链；返回通过者中证据最强（worst 接缝比值最小）的一个。
+ * 每次调用都会把逐候选、逐接缝的判定依据写入 debug 日志（含尺寸与灰度行数）。
+ */
+export function pickMergeLayout(sizes: ImageSize[], grays: Buffer[]): { layout: MergeLayout; score: number; seams: SeamVerdict[] } | null {
   const candidates = candidateLayouts(sizes.length, sizes)
-  let best: MergeLayout | null = null
-  let bestScore = Infinity
-  for (const c of candidates) {
-    const { pass, score } = verifyLayout(c, grays)
-    if (pass && score < bestScore) { best = c; bestScore = score }
+  debugLog(`同源合并候选：${sizes.length} 张，尺寸 ${sizes.map((s) => `${s.width}x${s.height}`).join(' / ')}，灰度行数 ${grays.map((g) => grayRows(g)).join('/')}`)
+  if (!candidates.length) {
+    debugLog('同源合并候选：无（数量/尺寸组合不构成网格/竖堆/横拼任何可能）')
+    return null
   }
+  let best: { layout: MergeLayout; score: number; seams: SeamVerdict[] } | null = null
+  for (const c of candidates) {
+    const { pass, score, seams } = verifyLayout(c, grays)
+    const detail = seams.map((v) =>
+      `[${v.dir === 'V' ? '竖' : '横'}缝 ${v.from}→${v.to}] ${v.reason}`).join('；')
+    debugLog(`同源合并证据·${layoutName(c)}：${pass ? '通过' : '拒绝'}，worst=${score === Infinity ? '∞' : score.toFixed(2)} ⟶ ${detail}`)
+    if (pass && (!best || score < best.score)) best = { layout: c, score, seams }
+  }
+  if (best) debugLog(`同源合并裁决：${layoutName(best.layout)}（证据最强，worst 接缝比值 ${best.score.toFixed(2)}）`)
+  else debugLog('同源合并裁决：全部候选未通过内容验证 → 逐张发送')
   return best
 }
 
@@ -333,11 +377,9 @@ export async function mergeImages(rt: ParserRuntime, urls: string[]): Promise<{ 
       debugLog(`切图合并跳过（灰度解码失败）：${e?.message || e}`)
       return null
     }
-    const layout = detectMergeLayout(sizes as ImageSize[], grays)
-    if (!layout) {
-      debugLog(`切图合并跳过（内容验证未通过：接缝不连续，非同源切片）`)
-      return null
-    }
+    const picked = pickMergeLayout(sizes as ImageSize[], grays)
+    if (!picked) return null
+    const layout = picked.layout
 
     const filter = buildMergeFilter(files.length, layout, sizes as ImageSize[])
     const args = ['-hide_banner', '-loglevel', 'error', ...files.flatMap((f) => ['-i', f]),

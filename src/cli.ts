@@ -103,7 +103,7 @@ koishi-plugin-video-parser-all CLI — 像 you-get 一样解析/下载视频
                          （低频趋势延续+纹理可验证性），取证据最强者；均不过逐张发送（需 ffmpeg）
   --twitter-auth-token <t>  X 登录态 auth_token（解析需登录推文；TLS 指纹由 tlsget-rs 处理，随包自动安装）
   --twitter-ct0 <t>         X 登录态 ct0（与 auth_token 配对，同时用作 csrf token）
-  --debug                开启调试日志
+  --debug                开启调试日志（含同源合并证据链：候选布局逐缝趋势差/基线/比值/纹理与裁决理由）
   -v, --version          显示版本
   -h, --help             显示帮助
 

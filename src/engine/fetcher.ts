@@ -170,6 +170,10 @@ export async function parseUrl(rt: ParserRuntime, url: string, type: string, fie
     if (type === 'xiaohongshu' && /xsec_token|gate|票据/i.test(msg)) {
       msg += '（小红书升级了风控：请发送完整分享链接，如 xhslink.com 短链、App 分享文案里的原链接，或带 xsec_token 参数的网页链接）'
     }
+    // 微博：API 仅支持视频微博，图文微博/新版 base62 短链会报「无法从URL中提取视频ID」
+    if (type === 'weibo' && /无法从URL中提取视频ID|提取.*视频ID/.test(msg)) {
+      msg += '（微博解析仅支持视频微博链接，如 weibo.com/tv/show/… 或 video.weibo.com/show?fid=…；图文微博与新版短链 /用户ID/短ID 形式暂不支持）'
+    }
     return { success: false, msg }
   }
 }
