@@ -45,10 +45,11 @@
 ## sns-parse 分层发布状态 (Published Packages)
 
 - npm scope `@sns-parse` 与 GitHub org `sns-parse`（char-46 为 admin）：
-  - `@sns-parse/core`：契约 + 配置 DSL + 平台配置聚合（`0.3.0-alpha.1+upstream.1.6.7`）
+  - `@sns-parse/core`：契约 + 配置 DSL + **解析引擎**（`0.4.0-alpha.1+upstream.1.6.7`；fetcher/parser/translate/twitter/merge/gif/tls-client/config-io/registry/动态运行时 `createRuntime(source, config, {defs, defaultExtensions})`；`defaultsFromContributions` 供无 Schema 宿主取默认值）
   - `@sns-parse/ext-nsfw|ext-merge|ext-translate|ext-gif` + `@sns-parse/extensions`（纯依赖聚合）
   - `@sns-parse/platform-<type>` ×27 + `@sns-parse/platforms`（纯依赖聚合）
-  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层，命名空间 `sns-parse`，动态配置
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层，命名空间 `sns-parse`，动态配置（`1.20.0-alpha.2+upstream.1.6.7` 引擎已切 core）
+  - `@sns-parse/cli`：CLI 兼容层（`0.1.0-alpha.1+upstream.1.6.7`，仓库 `sns-parse/cli`；bin `sns-parse` / `video-parser`；引擎与配置声明来自 core + 已安装碎片包；smoke 测试 tsx）
   - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（转发新包，迁移非强制）
 - 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 仅 `dependencies` 自动装全部碎片包，**不 re-export**；碎片包可自选安装。
 - 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
@@ -57,6 +58,16 @@
 
 ## 待办 (TODO)
 
-- **CLI 兼容层 `@sns-parse/cli`**：需先把引擎（`engine/fetcher`、`engine/parser`、`utils/{format,url,cache,concurrency,field-mapping,common,tls-client}`）下沉到 `@sns-parse/core` 并发布，再建独立 CLI 仓库；同样从 core 取配置声明。
-- **运行时实现切换**：koishi 运行时当前仍用本地实现（测试依赖本地 `nsfw/vault` 单例）；后续切换为 `ext-*` 包实现并同步测试。
+- **运行时实现切换**：koishi 运行时引擎（fetcher/parser/translate/twitter/merge/gif/tls-client/config-io）已切换为 `@sns-parse/core@0.4.0`（本仓库 19 处 shim 重导出 + runtime 包装注入）；剩余 `services/nsfw`、`extensions/default` 装配仍为本地实现，后续切换为 `ext-*` 包实现并同步测试。
 - 旧包 `@sns-parse/extensions@0.1.0`（实现版）已 `deprecate`；如需移除请在 npm 网页操作。
+
+## pnpm 工具链 (Toolchain)
+
+- **全部仓库已切 pnpm 12**（`packageManager: pnpm@12.3.4`）：`A:\sns-parse\{core,extensions,platforms,cli,legacy-plugin,koishi-plugin-sns-parse}`；CI 经 `pnpm/action-setup` + `pnpm install --frozen-lockfile`。
+- **pnpm 12 不再读 package.json 的 `pnpm` 字段**：构建脚本许可（`allowBuilds: {esbuild: true, ffmpeg-static: false}`）与工作区（`packages: ['packages/*']`）统一放 `pnpm-workspace.yaml`；`pnpm approve-builds --all -y` 可代写。
+- **供应链策略**：pnpm 12 默认 `minimumReleaseAge` 会拦截「当天发布」的依赖（含我们自己的 @sns-parse/* 新版本）→ 各仓 `pnpm-workspace.yaml` 统一 `minimumReleaseAge: 0`。
+- **registry 动态探测**（core 的 `createRequire` 扫描已装 platform-*/ext-*）依赖提升：koishi 与 cli 仓 `.npmrc` 配 `public-hoist-pattern[]=*@sns-parse*`。
+- **发布用 npm CLI**（`npm publish --access public --tag alpha`）：本机 pnpm publish 对 granular token 报 403（whoami 正常、npm 可发），原因未明；CI 内 pnpm publish 是否复现待首个 tag 验证。
+- **core 仓库测试用 tsx + node:assert**（`pnpm test`）：vitest 在 core 目录起跑即挂（换版本/清缓存/孤进程排查均无效；koishi 仓 vitest 正常）——勿在 core 重引 vitest。
+- **坑**：`linkTypeParser` 的规则 regex 必须带 `g` 标志，否则 `exec` 不推进 lastIndex → 死循环（测试里写裸 `/x/i` 会把 runner 挂死）。
+- 本机命令惯例：先打印 `START <时间>`；长任务用 `Start-Process`+`WaitForExit(<上限>)`+超时 `taskkill /PID <id> /T /F`（整树击杀，勿留孤儿）。
