@@ -7,7 +7,7 @@ import type { VideoParserExtensions } from './core/extensions'
 import { createDefaultExtensions } from './extensions/default'
 import { SimpleLRUCache } from './utils/cache'
 import { parseFieldMapping } from './utils/field-mapping'
-import { BUILTIN_LINK_RULES } from './platforms/rules'
+import { BUILTIN_LINK_RULES } from './platforms/definitions'
 import { buildCustomLinkRules } from './platforms/custom'
 
 export interface ParserRuntime {

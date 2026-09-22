@@ -6,7 +6,7 @@
  *
  * 平台专属端点已内联到各 PlatformDefinition（见 ./rules），此处聚合为映射。
  */
-import { BUILTIN_PLATFORMS } from './rules'
+import { BUILTIN_PLATFORMS } from './definitions'
 
 export const NEW_GATEWAY_PRIMARY = 'https://api-new.ifphp.com/api/svparse'
 export const LEGACY_GATEWAY_PRIMARY = 'https://api.bugpk.com/api/short_videos'

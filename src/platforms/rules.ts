@@ -1,8 +1,9 @@
 /**
- * 内置平台定义（按平台自包含：链接规则 + 专属 API）。
+ * 内置平台定义——**真相源**（紧凑聚合写法，便于集中审阅/批量增删）。
  *
- * 聚合导出 BUILTIN_LINK_RULES 供链接识别使用；
- * 后续拆分「每平台一个包」时，直接以本数组的元素为单位迁移。
+ * 运行期实际使用 `./definitions/*`（每平台一个文件，由本文件生成）：
+ *   修改本文件后请运行 `npx tsx scripts/gen-defs.ts` 重新生成。
+ * definitions 的生成产物是后续「每平台一个包」的迁移单位。
  */
 import type { PlatformDefinition } from '../core/platform'
 
