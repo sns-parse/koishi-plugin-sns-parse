@@ -1,0 +1,9 @@
+[submodule "vendor/core"]
+	path = vendor/core
+	url = https://github.com/sns-parse/core
+[submodule "vendor/extensions"]
+	path = vendor/extensions
+	url = https://github.com/sns-parse/extensions
+[submodule "vendor/platforms"]
+	path = vendor/platforms
+	url = https://github.com/sns-parse/platforms
