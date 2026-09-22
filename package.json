@@ -147,5 +147,6 @@
   "homepage": "https://github.com/sns-parse/koishi-plugin-sns-parse#readme",
   "engines": {
     "node": ">=16.0.0"
-  }
+  },
+  "packageManager": "pnpm@12.3.4"
 }
