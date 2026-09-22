@@ -118,7 +118,7 @@ Public tweets use the syndication API with zero config. **Login-required tweets*
 | `showMusicCover` | boolean | true | 发送音乐封面图片 (Send music cover image) |
 | `showVideoFile` | boolean | true | 视频是否以视频形式发送（关闭则只发送链接）(Send video as file, otherwise link only) |
 | `sendLiveMessage` | boolean | true | 直播作品发送文字消息（不发送视频）(Send text message for live streams, no video) |
-| `mergeSameOriginImages` | boolean | true | 同源图片内容识别合并（不依赖链接/文件名）：宫格数（4/9/16）按**色调风格一致性**（64bin RGB 直方图逐对交 ≥0.35，标定：同组壁纸 min 0.41 / 无关图 max 0.21）判定同源后拼 √n 宫格；非宫格数按**接缝亮度+纹理连续性**验证长图切分条带后堆叠/拼接；判定不过回退逐张；需 ffmpeg (Content-based same-origin merge: 4/9/16 → style-coherent grid collage; other counts → seam-verified strip merge; per-image fallback) |
+| `mergeSameOriginImages` | boolean | true | 同源切图**纯内容识别**合并（不依赖链接/文件名/色调风格）：网格/竖堆/横拼三种布局各自经**接缝连续性验证**（低频趋势延续 + 高频纹理能量可验证性，平坦边缘视为不可验证而拒绝），取证据最强（接缝比值最小）者合并；均不过回退逐张；需 ffmpeg (Pure content-based merge: grid/vstack/hstack candidates each seam-verified via low-freq trend continuity + texture verifiability; strongest evidence wins; per-image fallback) |
 
 ### 音乐语音 (Music Voice)
 | 配置项 (Config) | 类型 (Type) | 默认值 (Default) | 说明 (Description) |

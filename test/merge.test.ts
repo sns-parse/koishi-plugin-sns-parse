@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { deflateSync } from 'zlib'
 import { probeImageSize } from '../src/utils/image-size'
-import { candidateLayouts, verifyLayout, detectMergeLayout, xstackLayout, buildMergeFilter, mergeImages, colorFeatures, histIntersection, styleCoherent } from '../src/utils/merge'
+import { candidateLayouts, verifyLayout, detectMergeLayout, xstackLayout, buildMergeFilter, mergeImages } from '../src/utils/merge'
 import type { ImageSize } from '../src/utils/image-size'
 import type { MergeLayout } from '../src/utils/merge'
 import { makeRuntime } from './helpers'
@@ -160,32 +160,6 @@ describe('verifyLayout / detectMergeLayout（内容识别）', () => {
   })
 })
 
-/* ---------- 色调风格一致性（宫格数同源判定） ---------- */
-
-function thumbOf(pixels: [number, number, number][]): Buffer {
-  // 64x(len) RGB：像素按行铺开
-  const rows = Math.ceil(pixels.length / 64)
-  const b = Buffer.alloc(64 * rows * 3)
-  pixels.forEach((p, i) => { b[i * 3] = p[0]; b[i * 3 + 1] = p[1]; b[i * 3 + 2] = p[2] })
-  return b
-}
-
-describe('colorFeatures / styleCoherent（内容识别）', () => {
-  it('同色调组过、不同场景拒', () => {
-    // 同组：青绿色系（壁纸组主色调）
-    const teal = thumbOf(Array.from({ length: 128 }, (_, i) => [70 + i % 20, 150 + i % 25, 130 + i % 15] as [number, number, number]))
-    const teal2 = thumbOf(Array.from({ length: 128 }, (_, i) => [75 + i % 18, 155 + i % 22, 125 + i % 17] as [number, number, number]))
-    // 无关：暖红 vs 冷蓝 vs 灰白
-    const red = thumbOf(Array.from({ length: 128 }, () => [200, 90, 60]))
-    const blue = thumbOf(Array.from({ length: 128 }, () => [50, 90, 190]))
-    const white = thumbOf(Array.from({ length: 128 }, () => [210, 215, 220]))
-    expect(styleCoherent([colorFeatures(teal), colorFeatures(teal2)])).toBe(true)
-    expect(styleCoherent([colorFeatures(red), colorFeatures(blue), colorFeatures(white)])).toBe(false)
-    expect(histIntersection(colorFeatures(teal).hist, colorFeatures(teal2).hist)).toBeGreaterThan(0.6)
-    expect(histIntersection(colorFeatures(red).hist, colorFeatures(blue).hist)).toBeLessThan(0.1)
-  })
-})
-
 /* ---------- ffmpeg 滤镜串 ---------- */
 
 describe('xstackLayout / buildMergeFilter', () => {
@@ -269,10 +243,20 @@ describe('mergeImages 端到端（内容识别）', () => {
     urls.forEach((u, i) => { byUrl[u] = makePng(20, 10, [40 + i * 60, 100, 200]) })
     expect(await mergeImages(rtWithImages(byUrl), urls)).toBeNull()
   }, 30000)
-  it('3 张无关图 → 接缝验证不过 → 不合并（无宫格兜底）', async () => {
+  it('3 张无关图 → 接缝与风格均不过 → 不合并', async () => {
     const urls = [0, 1, 2].map((i) => `https://cdn.example.com/p${i}.jpg`)
     const byUrl: Record<string, Buffer> = {}
     urls.forEach((u, i) => { byUrl[u] = makePng(20 + i * 10, 10, [40 + i * 60, 100, 200]) })
+    expect(await mergeImages(rtWithImages(byUrl), urls)).toBeNull()
+  }, 30000)
+  it('同调色板非切片三图（接缝不连续）→ 不合并', async () => {
+    const urls = [0, 1, 2].map((i) => `https://cdn.example.com/p${i}.jpg`)
+    // 同一 MOTHER 调色板但取自相距很远的区域：色调风格一致但接缝内容不连续 → 纯内容判定拒绝
+    const byUrl: Record<string, Buffer> = {
+      [urls[0]]: makePngPattern(256, 128, MOTHER, 1000, 1000),
+      [urls[1]]: makePngPattern(256, 128, MOTHER, 5000, 3000),
+      [urls[2]]: makePngPattern(256, 128, MOTHER, 9000, 7000),
+    }
     expect(await mergeImages(rtWithImages(byUrl), urls)).toBeNull()
   }, 30000)
 })

@@ -36,8 +36,6 @@ const BOUNDARY_THRESH = 3.0
 const MAD_FLOOR = 3.0
 /** 边界带纹理能量下限：低于此值视为「不可验证接缝」（相似背景/平边照片会骗过亮度对比） */
 const TEXTURE_MIN = 4.0
-/** 色调风格一致性阈值：64bin RGB 直方图逐对交的下限（标定：同组壁纸 min 0.41，无关图交叉 max 0.21） */
-const STYLE_THRESH = 0.35
 
 /* ---------- 尺寸候选 ---------- */
 
@@ -148,27 +146,22 @@ export interface SeamVerdict {
 }
 
 /**
- * 单条接缝裁决：趋势延续（亮度）+ 纹理延续（去趋势残差）双重要求。
- * 基线 = 各自片内相邻行/列对的平均差异（不可跨片比较，否则无关片间差异会稀释接缝信号）。
- * 任一侧边界带纹理能量不足（TEXTURE_MIN）→ 不可验证 → 拒绝：
- * 相似背景/暗角的无关照片能骗过亮度对比，但平坦边缘本就无法证明连续。
+ * 单条接缝裁决：
+ * - 可验证性：任一侧边界带高频纹理能量不足（TEXTURE_MIN）→ 拒绝（平坦边缘无法证明连续）
+ * - 连续性：低频成分（平滑后）的边界差 vs 片内相邻行/列的自然步进，比值 < 阈值才通过。
+ *   高频纹理逐行天然去相关、不能作匹配信号，先平滑剔除；基线取各自片内相邻对
+ *   （不可跨片比较，否则无关片间差异会稀释接缝信号）。
  */
 function judgeSeam(edgeA: Float32Array, edgeB: Float32Array, innerPairs: () => [Float32Array, Float32Array][]): SeamVerdict {
-  const resA = residual(edgeA)
-  const resB = residual(edgeB)
-  const texture = Math.max(std(resA), std(resB))
+  const texture = Math.max(std(residual(edgeA)), std(residual(edgeB)))
   if (texture < TEXTURE_MIN) return { ok: false, score: Infinity }
+  const sA = smooth(edgeA)
+  const sB = smooth(edgeB)
   const pairs = innerPairs()
-  // 纹理延续：接缝两侧残差应接近（母图切片的纹理跨缝延续）
-  const innerRes = pairs.map(([p, q]) => mad(residual(p), residual(q)))
-  const resRef = Math.max(innerRes.reduce((t, s) => t + s, 0) / innerRes.length, MAD_FLOOR)
-  const resScore = mad(resA, resB) / resRef
-  if (resScore >= BOUNDARY_THRESH) return { ok: false, score: resScore }
-  // 趋势延续：边界亮度差与片内自然差异同量级
-  const innerTrend = pairs.map(([p, q]) => mad(p, q))
+  const innerTrend = pairs.map(([p, q]) => mad(smooth(p), smooth(q)))
   const trendRef = Math.max(innerTrend.reduce((t, s) => t + s, 0) / innerTrend.length, MAD_FLOOR)
-  const score = mad(edgeA, edgeB) / trendRef
-  return { ok: score < BOUNDARY_THRESH, score: Math.max(score, resScore) }
+  const score = mad(sA, sB) / trendRef
+  return { ok: score < BOUNDARY_THRESH, score }
 }
 
 /** 垂直接缝：A 末行 vs B 首行（基线取各自片内相邻行对） */
@@ -230,72 +223,6 @@ export function detectMergeLayout(sizes: ImageSize[], grays: Buffer[]): MergeLay
     if (pass && score < bestScore) { best = c; bestScore = score }
   }
   return best
-}
-
-/* ---------- 色调风格特征（宫格数同源判定） ---------- */
-
-export interface ColorFeatures {
-  hist: Float32Array
-  lumMean: number
-  lumStd: number
-}
-
-/** 解码为 64 宽 RGB 缩略图（buf = rows × 64 × 3 字节） */
-function toColorThumb(file: string): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(resolveFfmpeg(), [
-      '-hide_banner', '-loglevel', 'error', '-i', file,
-      '-vf', 'scale=64:-2:flags=area,format=rgb24', '-f', 'rawvideo', 'pipe:1',
-    ])
-    const chunks: Buffer[] = []
-    child.stdout.on('data', (d: Buffer) => chunks.push(d))
-    child.on('error', (e) => reject(e))
-    child.on('close', (code) => {
-      const buf = Buffer.concat(chunks)
-      if (code === 0 && buf.length >= 64 * 3 * 4) resolve(buf)
-      else reject(new Error(`color thumb decode exit ${code}`))
-    })
-  })
-}
-
-/** 4x4x4 RGB 直方图（归一化）+ 亮度统计 */
-export function colorFeatures(thumb: Buffer): ColorFeatures {
-  const hist = new Float32Array(64)
-  let lumSum = 0
-  let lumSum2 = 0
-  let count = 0
-  for (let i = 0; i + 2 < thumb.length; i += 3) {
-    const r = thumb[i]
-    const g = thumb[i + 1]
-    const b = thumb[i + 2]
-    hist[(r >> 6) * 16 + (g >> 6) * 4 + (b >> 6)]++
-    const lum = 0.299 * r + 0.587 * g + 0.114 * b
-    lumSum += lum
-    lumSum2 += lum * lum
-    count++
-  }
-  if (!count) return { hist, lumMean: 0, lumStd: 0 }
-  for (let i = 0; i < 64; i++) hist[i] /= count
-  const mean = lumSum / count
-  return { hist, lumMean: mean, lumStd: Math.sqrt(Math.max(0, lumSum2 / count - mean * mean)) }
-}
-
-/** 直方图交（∈[0,1]，越大越相似） */
-export function histIntersection(a: Float32Array, b: Float32Array): number {
-  let s = 0
-  for (let i = 0; i < a.length; i++) s += Math.min(a[i], b[i])
-  return s
-}
-
-/** 色调风格一致性：逐对直方图交全部不低于阈值（同一组图共享色调分布；无关场景差异显著） */
-export function styleCoherent(feats: ColorFeatures[]): boolean {
-  if (feats.length < 2) return false
-  for (let i = 0; i < feats.length; i++) {
-    for (let j = i + 1; j < feats.length; j++) {
-      if (histIntersection(feats[i].hist, feats[j].hist) < STYLE_THRESH) return false
-    }
-  }
-  return true
 }
 
 /* ---------- ffmpeg 合并 ---------- */
@@ -394,35 +321,23 @@ export async function mergeImages(rt: ParserRuntime, urls: string[]): Promise<{ 
       await writeFile(f, buffers[i])
       files.push(f)
     }
-    // 布局选择（全部由内容决定，不依赖链接/文件名）：
-    // ① 宫格数（4/9/16）→ 色调风格一致性判定同源（同组图共享色调分布），过阈值拼 √n 宫格
-    // ② 非宫格数 → 接缝连续性验证（趋势+纹理双通道），命中按长图条带堆叠/拼接
-    // 任一判定不过 → 不合并，逐张发送
-    const n = files.length
-    let layout: MergeLayout | null = null
-    if (Number.isInteger(Math.sqrt(n))) {
-      try {
-        const thumbs = await Promise.all(files.map(toColorThumb))
-        if (styleCoherent(thumbs.map(colorFeatures))) {
-          layout = { kind: 'grid', cols: Math.sqrt(n), rows: Math.sqrt(n) }
-        } else {
-          debugLog(`宫格合并跳过（色调风格不一致：非同源图组）`)
-        }
-      } catch (e: any) {
-        debugLog(`宫格合并跳过（缩略图解码失败）：${e?.message || e}`)
-      }
-    } else {
-      let grays: Buffer[]
-      try {
-        grays = await Promise.all(files.map(toGray))
-      } catch (e: any) {
-        debugLog(`切图合并跳过（灰度解码失败）：${e?.message || e}`)
-        return null
-      }
-      layout = detectMergeLayout(sizes as ImageSize[], grays)
-      if (!layout) debugLog(`切图合并跳过（内容验证未通过：接缝不连续，非同源切片）`)
+    // 布局决策（完全由像素内容裁决，不依赖数量规则、链接/文件名与色调风格）：
+    // 网格/竖堆/横拼三种布局候选（按尺寸可能性给出），逐一经接缝内容验证
+    // （亮度趋势 + 去趋势纹理双通道、平坦边缘不可验证即拒绝），
+    // 取通过者中证据最强（接缝比值最小）的一种——真 2x2/3x3 切片网格缝连续、
+    // 长图条带单向连续、无关图全部不过；合并方式由内容区分，均不过则逐张发送
+    let grays: Buffer[]
+    try {
+      grays = await Promise.all(files.map(toGray))
+    } catch (e: any) {
+      debugLog(`切图合并跳过（灰度解码失败）：${e?.message || e}`)
+      return null
     }
-    if (!layout) return null
+    const layout = detectMergeLayout(sizes as ImageSize[], grays)
+    if (!layout) {
+      debugLog(`切图合并跳过（内容验证未通过：接缝不连续，非同源切片）`)
+      return null
+    }
 
     const filter = buildMergeFilter(files.length, layout, sizes as ImageSize[])
     const args = ['-hide_banner', '-loglevel', 'error', ...files.flatMap((f) => ['-i', f]),
