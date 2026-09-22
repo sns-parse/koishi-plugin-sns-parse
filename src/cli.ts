@@ -228,14 +228,25 @@ async function downloadAll(p: ParsedData, type: string, outDir: string, merged: 
   await mkdir(outDir, { recursive: true })
   const base = sanitize(p.title) || `${type}_${Date.now()}`
   console.log('\n开始下载:')
+  // URL 级去重：封面=图集首图、实况图=封面等场景不重复下载
+  const downloaded = new Set<string>()
+  const dl = async (url: string, filepath: string, label: string) => {
+    if (!url) return
+    if (downloaded.has(url)) {
+      console.log(`  ↷ 跳过重复（与此前已下载内容相同）: ${label}`)
+      return
+    }
+    downloaded.add(url)
+    await downloadOne(url, filepath, label)
+  }
   if (p.video) {
     const useV = p.videos[0]?.url || p.video
-    await downloadOne(useV, join(outDir, `${base}${inferExt(useV, '.mp4')}`), '视频')
+    await dl(useV, join(outDir, `${base}${inferExt(useV, '.mp4')}`), '视频')
   }
   // 多视频推文：其余视频全量下载（主视频无后缀，其余 _2 _3…）
   for (let i = 0; i < (p.extraVideos?.length || 0); i++) {
     const u = p.extraVideos![i].url
-    await downloadOne(u, join(outDir, `${base}_${i + 2}${inferExt(u, '.mp4')}`), `视频 ${i + 2}/${p.extraVideos!.length + 1}`)
+    await dl(u, join(outDir, `${base}_${i + 2}${inferExt(u, '.mp4')}`), `视频 ${i + 2}/${p.extraVideos!.length + 1}`)
   }
   if (p.images.length) {
     // --merge-images：同源切图合并成功时保存合并图，替代逐张分片
@@ -243,20 +254,21 @@ async function downloadAll(p: ParsedData, type: string, outDir: string, merged: 
       const f = join(outDir, `${base}_merged.jpg`)
       await writeFile(f, merged.buffer)
       console.log(`  ✓ 已保存合并图（${p.images.length} 片 → ${layoutDesc(merged.layout)}）: ${f}`)
+      for (const u of p.images) downloaded.add(u)
     } else {
       for (let i = 0; i < p.images.length; i++) {
-        await downloadOne(p.images[i], join(outDir, `${base}_${i + 1}${inferExt(p.images[i], '.jpg')}`), `图片 ${i + 1}/${p.images.length}`)
+        await dl(p.images[i], join(outDir, `${base}_${i + 1}${inferExt(p.images[i], '.jpg')}`), `图片 ${i + 1}/${p.images.length}`)
       }
     }
   }
   if (p.live_photo.length) {
     for (let i = 0; i < p.live_photo.length; i++) {
-      await downloadOne(p.live_photo[i].image, join(outDir, `${base}_live_${i + 1}${inferExt(p.live_photo[i].image, '.jpg')}`), `实况图 ${i + 1}`)
-      if (p.live_photo[i].video) await downloadOne(p.live_photo[i].video!, join(outDir, `${base}_live_${i + 1}.mp4`), `实况视频 ${i + 1}`)
+      await dl(p.live_photo[i].image, join(outDir, `${base}_live_${i + 1}${inferExt(p.live_photo[i].image, '.jpg')}`), `实况图 ${i + 1}`)
+      if (p.live_photo[i].video) await dl(p.live_photo[i].video!, join(outDir, `${base}_live_${i + 1}.mp4`), `实况视频 ${i + 1}`)
     }
   }
-  if (p.cover) await downloadOne(p.cover, join(outDir, `${base}_cover${inferExt(p.cover, '.jpg')}`), '封面')
-  if (p.music.url) await downloadOne(p.music.url, join(outDir, `${base}_music${inferExt(p.music.url, '.mp3')}`), '音乐')
+  if (p.cover) await dl(p.cover, join(outDir, `${base}_cover${inferExt(p.cover, '.jpg')}`), '封面')
+  if (p.music.url) await dl(p.music.url, join(outDir, `${base}_music${inferExt(p.music.url, '.mp3')}`), '音乐')
 }
 
 async function main(): Promise<void> {
