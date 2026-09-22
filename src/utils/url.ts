@@ -6,8 +6,11 @@ export function cleanUrl(url: string): string {
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')
             .replace(/\\\//g, '/')
-  url = url.replace(/^[\s"'<“”‘’]+/, '')
-  url = url.replace(/[\s"'<>\{\}\[\]`,;，。！？：；“”‘’…—～]+$/, '')
+  url = url.replace(/^[\s"'<（(“”‘’]+/, '')
+  url = url.replace(/[\s"'<>\{\}\[\]`,;，。！？：；“”‘’…—～.()）]+$/, '')
+  // 剔除链接后残留的 XML/HTML 标签片段（如卡片消息里的 <op>…（上游 v1.6.7）
+  const tagStart = url.indexOf('<')
+  if (tagStart > 0) url = url.slice(0, tagStart)
   if (!/^https?:\/\//i.test(url)) {
     if (/^\/\//.test(url)) url = 'https:' + url
     else return url
@@ -17,7 +20,7 @@ export function cleanUrl(url: string): string {
 
 export function linkTypeParser(content: string, rules: { pattern: RegExp; type: string }[]): LinkMatch[] {
   content = content.replace(/\\\//g, '/')
-  const matches: LinkMatch[] = []
+  const matches: (LinkMatch & { pos: number })[] = []
   const seen = new Set<string>()
   for (const rule of rules) {
     let match: RegExpExecArray | null
@@ -28,10 +31,11 @@ export function linkTypeParser(content: string, rules: { pattern: RegExp; type: 
       if (!url) continue
       if (seen.has(url)) continue
       seen.add(url)
-      matches.push({ type: rule.type, url, id: match[1] || url })
+      // 记录出现位置，多链接按正文出现顺序排列（上游 v1.6.7）
+      matches.push({ type: rule.type, url, id: match[1] || url, pos: match.index })
     }
   }
-  return matches
+  return matches.sort((a, b) => a.pos - b.pos).map(({ pos, ...m }) => m)
 }
 
 export function extractAllUrlsFromMessage(session: any, rules: { pattern: RegExp; type: string }[]): LinkMatch[] {

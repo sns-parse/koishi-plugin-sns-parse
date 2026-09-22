@@ -74,11 +74,24 @@ export function parseApiResponse(rawInput: any, maxDescLen: number, fieldMapping
   if (video && !video.startsWith('http')) video = 'https:' + video
 
   let images: string[] = []
+  // 统一图片地址规范化：兼容大写协议、// 协议相对地址、{url} 对象与数组形式（上游 v1.6.7）
+  const normalizeImageUrl = (img: any): string | null => {
+    if (typeof img === 'string') {
+      if (!img) return null
+      return /^https?:\/\//i.test(img) ? img : (/^\/\//.test(img) ? 'https:' + img : 'https:' + img)
+    }
+    if (Array.isArray(img) && img.length) return normalizeImageUrl(img[0])
+    if (img && typeof img === 'object' && img.url) return normalizeImageUrl(String(img.url))
+    return null
+  }
   const directImages = mapField('images', () => data.images)
   if (Array.isArray(directImages)) {
-    images = directImages.filter((img: any) => img && typeof img === 'string').map((img: any) => img.startsWith('http') ? img : 'https:' + img)
+    images = directImages.map(normalizeImageUrl).filter((u: string | null): u is string => !!u)
   } else if (Array.isArray(data.imgurl)) {
-    images = data.imgurl.filter((img: any) => img && typeof img === 'string').map((img: any) => img.startsWith('http') ? img : 'https:' + img)
+    images = data.imgurl.map(normalizeImageUrl).filter((u: string | null): u is string => !!u)
+  } else if (directImages && typeof directImages === 'object') {
+    const single = normalizeImageUrl(directImages)
+    if (single) images = [single]
   }
 
   const live_photo = Array.isArray(data.live_photo) ? data.live_photo.filter((lp: any) => lp && lp.image).map((lp: any) => ({
@@ -92,11 +105,13 @@ export function parseApiResponse(rawInput: any, maxDescLen: number, fieldMapping
 
   const musicCoverRaw = mapField('music_cover', () => data.music?.cover || data.music?.albumCover?.url || '')
   const musicUrlRaw = mapField('music_url', () => data.music?.url || data.music?.playURL || '')
+  const musicUrlNorm = musicUrlRaw ? (String(musicUrlRaw).startsWith('http') ? String(musicUrlRaw) : 'https:' + String(musicUrlRaw)) : ''
   const music = {
     title: mapField('music_title', () => data.music?.title || data.music?.name || '') as string,
     author: mapField('music_author', () => data.music?.author || data.music?.artist || '') as string,
     cover: musicCoverRaw ? (String(musicCoverRaw).startsWith('http') ? String(musicCoverRaw) : 'https:' + String(musicCoverRaw)) : '',
-    url: musicUrlRaw ? (String(musicUrlRaw).startsWith('http') ? String(musicUrlRaw) : 'https:' + String(musicUrlRaw)) : '',
+    // 过滤占位垃圾值（如即梦接口返回的 map[]），含空白/括号的地址不视为有效链接（上游 v1.6.7）
+    url: /[\s\[\]]/.test(musicUrlNorm) ? '' : musicUrlNorm,
   }
 
   const like = parseCount(mapField('like', () => data.like ?? data.statistics?.digg_count ?? data.statistics?.like_count ?? data.statistics?.likes ?? extra.statistics?.digg_count ?? extra.statistics?.like_count ?? extra.statistics?.likes ?? data.attitudes_count ?? 0))
@@ -111,7 +126,7 @@ export function parseApiResponse(rawInput: any, maxDescLen: number, fieldMapping
   } else {
     const durRaw = mapField('duration', () => data.duration)
     if (durRaw) {
-      duration = typeof durRaw === 'string' ? parseInt(durRaw, 10) : Number(durRaw)
+      duration = typeof durRaw === 'string' ? parseInt(durRaw, 10) : Math.floor(Number(durRaw))
     }
   }
 

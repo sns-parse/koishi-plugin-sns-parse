@@ -26,7 +26,7 @@ export const defaultDedicatedApisLegacy: Record<string, string> = {
   wechat_channel: 'https://api.bugpk.com/api/wxsph',
 }
 
-/** 新网关平台专属端点（与上游 v1.6.2 对齐；需 Key；未覆盖的平台走主 API 兜底） */
+/** 新网关平台专属端点（与上游 v1.6.7 对齐；需 Key；未覆盖的平台走主 API 兜底） */
 export const defaultDedicatedApisNew: Record<string, string> = {
   bilibili: 'https://api-new.ifphp.com/api/bilibili',
   douyin: 'https://api-new.ifphp.com/api/dyjx',
@@ -34,4 +34,5 @@ export const defaultDedicatedApisNew: Record<string, string> = {
   wechat_channel: 'https://api-new.ifphp.com/api/wxsph',
   doubao: 'https://api-new.ifphp.com/api/doubao',
   pipigx: 'https://api-new.ifphp.com/api/pipigx',
+  jimeng: 'https://api-new.ifphp.com/api/jimeng',
 }

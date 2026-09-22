@@ -159,7 +159,12 @@ export async function parseUrl(rt: ParserRuntime, url: string, type: string, fie
     return { success: false, msg: '解析接口返回空内容' }
   } catch (error) {
     logger.error(`解析失败: ${url}`, getErrorMessage(error))
-    return { success: false, msg: getErrorMessage(error) }
+    let msg = getErrorMessage(error)
+    // 小红书风控：裸 /discovery/item 链接缺 xsec_token，服务端获取 gate 票据失败；提示用户改发完整分享链接
+    if (type === 'xiaohongshu' && /xsec_token|gate|票据/i.test(msg)) {
+      msg += '（小红书升级了风控：请发送完整分享链接，如 xhslink.com 短链、App 分享文案里的原链接，或带 xsec_token 参数的网页链接）'
+    }
+    return { success: false, msg }
   }
 }
 
