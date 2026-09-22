@@ -70,4 +70,6 @@
 - **发布用 npm CLI**（`npm publish --access public --tag alpha`）：本机 pnpm publish 对 granular token 报 403（whoami 正常、npm 可发），原因未明；CI 内 pnpm publish 是否复现待首个 tag 验证。
 - **core 仓库测试用 tsx + node:assert**（`pnpm test`）：vitest 在 core 目录起跑即挂（换版本/清缓存/孤进程排查均无效；koishi 仓 vitest 正常）——勿在 core 重引 vitest。
 - **坑**：`linkTypeParser` 的规则 regex 必须带 `g` 标志，否则 `exec` 不推进 lastIndex → 死循环（测试里写裸 `/x/i` 会把 runner 挂死）。
+- **依赖范围禁止含 build metadata**（`+upstream...`）：npmjs 宽容、**npmmirror 严格解析 → ETARGET**（`@sns-parse/platforms@0.2.0-alpha.1` 踩坑，0.2.0-alpha.2 起修复）；版本号本身可带 build 段（npm 发布时自动剥离）。
+- **发包后自动同步 npmmirror**：`node scripts/sync-mirrors.mjs`（404 包 GET 触发按需同步 + 滞后包显式 `PUT /-/package/<name>/syncs` + 每秒轮询、全部就绪即退）；extensions/platforms/legacy/cli 的 CI 在 tag 发布后自动执行（从本仓库 main 拉取脚本）。镜像 CDN 边缘可能**缓存 404（负缓存）**：用户侧重试仍 404 时等待数分钟或临时切换 registry.npmjs.org。
 - 本机命令惯例：先打印 `START <时间>`；长任务用 `Start-Process`+`WaitForExit(<上限>)`+超时 `taskkill /PID <id> /T /F`（整树击杀，勿留孤儿）。
