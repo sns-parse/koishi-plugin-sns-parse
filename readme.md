@@ -118,6 +118,7 @@ Public tweets use the syndication API with zero config. **Login-required tweets*
 | `showMusicCover` | boolean | true | 发送音乐封面图片 (Send music cover image) |
 | `showVideoFile` | boolean | true | 视频是否以视频形式发送（关闭则只发送链接）(Send video as file, otherwise link only) |
 | `sendLiveMessage` | boolean | true | 直播作品发送文字消息（不发送视频）(Send text message for live streams, no video) |
+| `mergeSameOriginImages` | boolean | true | 同源切图自动合并：同一母图切出的四宫格/九宫格/n×n 宫格与水平/垂直切分条带合成一张发送（需 ffmpeg，识别失败自动回退逐张）(Auto-merge same-origin split images: 4/9/n×n grids and H/V strips into one; falls back to per-image sending) |
 
 ### 音乐语音 (Music Voice)
 | 配置项 (Config) | 类型 (Type) | 默认值 (Default) | 说明 (Description) |

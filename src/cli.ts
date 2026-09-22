@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import axios from 'axios'
 import { createWriteStream, existsSync } from 'fs'
-import { mkdir, stat } from 'fs/promises'
+import { mkdir, stat, writeFile } from 'fs/promises'
 import { join, resolve, extname } from 'path'
 import { linkTypeParser } from './utils/url'
 import { BUILTIN_LINK_RULES } from './platforms/rules'
@@ -11,6 +11,7 @@ import { parseUrl } from './engine/fetcher'
 import { generateFormattedText, formatDuration, formatPublishTime } from './utils/format'
 import { setVerboseLogging, debugLog } from './utils/logger'
 import { langName } from './utils/translate'
+import { mergeImages, type MergeLayout } from './utils/merge'
 import { shutdownTlsClient } from './utils/tls-client'
 import type { Context } from 'koishi'
 import type { ParsedData } from './types'
@@ -39,6 +40,7 @@ interface CliArgs {
   apiKey: string | undefined
   proxy: string | undefined
   dedicatedFirst: boolean
+  mergeImages: boolean
   twitterAuthToken: string | undefined
   twitterCt0: string | undefined
 }
@@ -47,7 +49,7 @@ function parseArgs(argv: string[]): CliArgs {
   const args: CliArgs = {
     url: '', download: false, output: '.', json: false, info: false, debug: false,
     api: undefined, apiKey: undefined, proxy: undefined, dedicatedFirst: false,
-    twitterAuthToken: undefined, twitterCt0: undefined,
+    mergeImages: false, twitterAuthToken: undefined, twitterCt0: undefined,
   }
   const positional: string[] = []
   for (let i = 0; i < argv.length; i++) {
@@ -62,6 +64,7 @@ function parseArgs(argv: string[]): CliArgs {
       case '--api-key': args.apiKey = argv[++i]; break
       case '--proxy': args.proxy = argv[++i]; break
       case '--dedicated-first': args.dedicatedFirst = true; break
+      case '--merge-images': args.mergeImages = true; break
       case '--twitter-auth-token': args.twitterAuthToken = argv[++i]; break
       case '--twitter-ct0': args.twitterCt0 = argv[++i]; break
       case '-v': case '--version': printVersion(); process.exit(0)
@@ -96,6 +99,8 @@ koishi-plugin-video-parser-all CLI — 像 you-get 一样解析/下载视频
   --api-key <key>        api-new.ifphp.com 网关 API Key（配置后自动切换新网关）
   --proxy <url>          HTTP 代理，如 http://127.0.0.1:7890
   --dedicated-first      优先使用平台专属 API
+  --merge-images         识别同源切图（四宫格/九宫格/横竖切分条带）并合并为一张：
+                         信息模式显示检测结果，下载模式保存合并图替代逐张分片（需 ffmpeg）
   --twitter-auth-token <t>  X 登录态 auth_token（解析需登录推文；TLS 指纹由 tlsget-rs 处理，随包自动安装）
   --twitter-ct0 <t>         X 登录态 ct0（与 auth_token 配对，同时用作 csrf token）
   --debug                开启调试日志
@@ -214,7 +219,12 @@ function printInfo(p: ParsedData, type: string): void {
   console.log(rows.filter(Boolean).join('\n'))
 }
 
-async function downloadAll(p: ParsedData, type: string, outDir: string): Promise<void> {
+function layoutDesc(layout: MergeLayout): string {
+  if (layout.kind === 'grid') return `${layout.cols}x${layout.rows} 宫格`
+  return layout.kind === 'v' ? '垂直堆叠（水平切分）' : '水平拼接（垂直切分）'
+}
+
+async function downloadAll(p: ParsedData, type: string, outDir: string, merged: { buffer: Buffer; layout: MergeLayout } | null = null): Promise<void> {
   await mkdir(outDir, { recursive: true })
   const base = sanitize(p.title) || `${type}_${Date.now()}`
   console.log('\n开始下载:')
@@ -228,8 +238,15 @@ async function downloadAll(p: ParsedData, type: string, outDir: string): Promise
     await downloadOne(u, join(outDir, `${base}_${i + 2}${inferExt(u, '.mp4')}`), `视频 ${i + 2}/${p.extraVideos!.length + 1}`)
   }
   if (p.images.length) {
-    for (let i = 0; i < p.images.length; i++) {
-      await downloadOne(p.images[i], join(outDir, `${base}_${i + 1}${inferExt(p.images[i], '.jpg')}`), `图片 ${i + 1}/${p.images.length}`)
+    // --merge-images：同源切图合并成功时保存合并图，替代逐张分片
+    if (merged) {
+      const f = join(outDir, `${base}_merged.jpg`)
+      await writeFile(f, merged.buffer)
+      console.log(`  ✓ 已保存合并图（${p.images.length} 片 → ${layoutDesc(merged.layout)}）: ${f}`)
+    } else {
+      for (let i = 0; i < p.images.length; i++) {
+        await downloadOne(p.images[i], join(outDir, `${base}_${i + 1}${inferExt(p.images[i], '.jpg')}`), `图片 ${i + 1}/${p.images.length}`)
+      }
     }
   }
   if (p.live_photo.length) {
@@ -279,6 +296,19 @@ async function main(): Promise<void> {
       const parsed = result.data
       debugLog('解析结果', parsed)
 
+      // --merge-images：同源切图识别与合并（独立选项，默认关闭）
+      let merged: { buffer: Buffer; layout: MergeLayout } | null = null
+      if (args.mergeImages && parsed.images.length >= 2) {
+        merged = await mergeImages(rt, parsed.images)
+        if (!args.json) {
+          if (merged) {
+            console.log(`▶ 同源切图: ${parsed.images.length} 片 → 已合并（${layoutDesc(merged.layout)}，${Math.round(merged.buffer.length / 1024)}KB）`)
+          } else {
+            console.log('▶ 同源切图: 未检测到（图片非同源切分或 ffmpeg 不可用）')
+          }
+        }
+      }
+
       if (args.json) {
         console.log(JSON.stringify(parsed, null, 2))
       } else {
@@ -290,7 +320,7 @@ async function main(): Promise<void> {
       }
 
       if (args.download) {
-        await downloadAll(parsed, type, resolve(args.output))
+        await downloadAll(parsed, type, resolve(args.output), merged)
       }
     }
   } catch (e: any) {

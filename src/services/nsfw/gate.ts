@@ -130,6 +130,26 @@ export async function processImage(rt: ParserRuntime, platform: string, url: str
   return { kind: 'scrambled', buffer: s.buffer, token: s.token }
 }
 
+/**
+ * 处理合并图（同源切图合一后的成品 buffer）：
+ * - off → 直发合并图；smart 且合并图送审通过 → 直发
+ * - smart 命中 / full / 审核异常（fail-closed）→ 返回 null，调用方回退逐张走 processImage
+ */
+export async function processMergedImage(rt: ParserRuntime, platform: string, buffer: Buffer, refUrl: string): Promise<ImageOutcome | null> {
+  const policy = resolvePolicy(rt, platform)
+  if (policy.mode === 'off') return { kind: 'raw', buffer }
+  if (policy.mode === 'full') return null
+  const provider = getModerationProvider(rt)
+  if (!provider) return { kind: 'raw', buffer }
+  try {
+    const result = await provider.check({ url: refUrl, buffer })
+    debugLog(`合并图审核 ${result.nsfw ? '命中' : '通过'}（${result.detail || result.label || 'clean'}）: ${refUrl.slice(0, 60)}`)
+    return result.nsfw ? null : { kind: 'raw', buffer }
+  } catch {
+    return null
+  }
+}
+
 export interface VideoOutcome {
   /** raw=照发；card=群内纯文字卡片+token（无封面无视频）；link=文字卡片+原链接；drop=仅文字卡片 */
   kind: 'raw' | 'card' | 'link' | 'drop'

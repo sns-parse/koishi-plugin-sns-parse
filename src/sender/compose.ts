@@ -94,9 +94,10 @@ export function buildUnits(rt: ParserRuntime, item: ProcessedItem): MessageUnit[
   // ④ 音乐封面
   if (config.showMusicCover && p.music.cover) push([h.image(p.music.cover)], true)
 
-  // ⑤ 非混淆图片
+  // ⑤ 非混淆图片（raw 可带 buffer：同源切图合并成品优先按 buffer 发送）
   for (const img of item.images) {
-    if (img.kind === 'raw' && img.url) push([h.image(img.url)], true)
+    if (img.kind === 'raw' && img.buffer) push([h.image(img.buffer, 'image/jpeg')], true)
+    else if (img.kind === 'raw' && img.url) push([h.image(img.url)], true)
     else if (img.kind === 'link' && img.url) push([h.text(`图片链接：${img.url}`)], true)
   }
 

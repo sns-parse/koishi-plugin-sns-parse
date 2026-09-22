@@ -17,9 +17,10 @@ import { ConcurrencyLimiter } from '../utils/concurrency'
 import { debugLog, logger } from '../utils/logger'
 import { contentFingerprint, getText } from '../utils/common'
 import { mp4ToGif } from '../utils/gif'
+import { mergeImages } from '../utils/merge'
 import { getPlatformConfig } from '../platforms/custom'
 import { processSingleUrl } from '../engine/fetcher'
-import { processImage, processVideo } from '../services/nsfw/gate'
+import { processImage, processVideo, processMergedImage } from '../services/nsfw/gate'
 import type { ImageOutcome, VideoOutcome } from '../services/nsfw/gate'
 import { sendWithTimeout } from './sender'
 import { sendSplit, sendSingle, type ProcessedItem } from './compose'
@@ -40,8 +41,25 @@ function dedupScopeKey(session: any, url: string): string {
 async function processItem(rt: ParserRuntime, session: any, platform: string, text: string, parsed: any): Promise<ProcessedItem> {
   const requesterId = String(session?.userId || 'unknown')
   const images: ImageOutcome[] = []
-  for (const url of (parsed.images || []) as string[]) {
-    images.push(await processImage(rt, platform, url, 'image'))
+  // 同源切图合并：四宫格/九宫格/n×n 宫格与水平/垂直切分条带识别为一张母图的分片，合成后发送；
+  // 识别失败 / ffmpeg 不可用 / 审核 fail-closed → 回退逐张处理
+  let mergedSent = false
+  if (rt.config.mergeSameOriginImages !== false && (parsed.images || []).length >= 2) {
+    try {
+      const merged = await mergeImages(rt, parsed.images)
+      if (merged) {
+        const outcome = await processMergedImage(rt, platform, merged.buffer, parsed.images[0])
+        if (outcome) { images.push(outcome); mergedSent = true }
+        else debugLog('合并图未过内容安全策略，回退逐张处理')
+      }
+    } catch (e: any) {
+      debugLog(`切图合并跳过（${e?.message || e}）`)
+    }
+  }
+  if (!mergedSent) {
+    for (const url of (parsed.images || []) as string[]) {
+      images.push(await processImage(rt, platform, url, 'image'))
+    }
   }
   const avatar = parsed.avatar ? await processImage(rt, platform, parsed.avatar, 'avatar') : { kind: 'drop' as const }
   const cover = (parsed.cover && parsed.type !== 'image' && parsed.type !== 'live_photo' && parsed.type !== 'live')
