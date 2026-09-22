@@ -61,7 +61,7 @@ export const Config = Schema.intersect([
     showMusicCover: Schema.boolean().default(true).description('发送音乐封面'),
     showVideoFile: Schema.boolean().default(true).description('视频以视频形式发送（关闭则只发链接）'),
     sendLiveMessage: Schema.boolean().default(true).description('直播作品发文字消息（不发视频）'),
-    mergeSameOriginImages: Schema.boolean().default(true).description('同源切图自动合并（同一母图切出的四宫格/九宫格/横竖条带合成一张发送；需 ffmpeg，识别失败自动回退逐张）'),
+    mergeSameOriginImages: Schema.boolean().default(true).description('图集自动拼图发送：宫格数（4/9/16）直接拼宫格预览；非宫格数按图片内容识别长图切分条带（接缝连续性验证）合并，未命中则近方宫格兜底；需 ffmpeg，失败回退逐张'),
   }).description('媒体发送'),
 
   Schema.object({

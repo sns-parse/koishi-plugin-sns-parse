@@ -99,8 +99,8 @@ koishi-plugin-video-parser-all CLI — 像 you-get 一样解析/下载视频
   --api-key <key>        api-new.ifphp.com 网关 API Key（配置后自动切换新网关）
   --proxy <url>          HTTP 代理，如 http://127.0.0.1:7890
   --dedicated-first      优先使用平台专属 API
-  --merge-images         识别同源切图（四宫格/九宫格/横竖切分条带）并合并为一张：
-                         信息模式显示检测结果，下载模式保存合并图替代逐张分片（需 ffmpeg）
+  --merge-images         图集拼图：宫格数（4/9/16）直接拼宫格预览；非宫格数按内容识别
+                         长图切分条带合并，未命中近方宫格兜底（需 ffmpeg；下载模式保存拼图替代逐张）
   --twitter-auth-token <t>  X 登录态 auth_token（解析需登录推文；TLS 指纹由 tlsget-rs 处理，随包自动安装）
   --twitter-ct0 <t>         X 登录态 ct0（与 auth_token 配对，同时用作 csrf token）
   --debug                开启调试日志
