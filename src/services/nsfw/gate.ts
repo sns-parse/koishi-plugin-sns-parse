@@ -18,11 +18,14 @@ import { createProvider, withFailClosed } from './moderation'
 import type { ModerationProvider } from './moderation'
 import { getFerret, scrambleImage } from './scramble'
 import { videoVault } from './vault'
+import type { ImageOutcome, MediaKind, VideoOutcome } from '../../core/extensions'
+
+// 类型已上移至 core/extensions（扩展契约），此处 re-export 保持既有引用兼容
+export type { ImageOutcome, MediaKind, VideoOutcome } from '../../core/extensions'
 
 export type PlatformMode = 'off' | 'full' | 'smart'
 export type ImageAction = 'scramble' | 'link' | 'drop'
 export type VideoAction = 'redeem' | 'link' | 'drop'
-export type MediaKind = 'cover' | 'image' | 'avatar' | 'music-cover'
 
 export interface ResolvedPolicy {
   mode: PlatformMode
@@ -85,14 +88,6 @@ export function resolvePolicy(rt: ParserRuntime, platform: string): ResolvedPoli
   return policy
 }
 
-export interface ImageOutcome {
-  /** raw=原图 url；scrambled=混淆 buffer+token；link=仅链接文字；drop=不发送 */
-  kind: 'raw' | 'scrambled' | 'link' | 'drop'
-  url?: string
-  buffer?: Buffer
-  token?: string
-}
-
 /** 审核判定单图（smart 模式内部使用；含缓存） */
 async function moderateImage(rt: ParserRuntime, url: string): Promise<boolean> {
   const provider = getModerationProvider(rt)
@@ -148,13 +143,6 @@ export async function processMergedImage(rt: ParserRuntime, platform: string, bu
   } catch {
     return null
   }
-}
-
-export interface VideoOutcome {
-  /** raw=照发；card=群内纯文字卡片+token（无封面无视频）；link=文字卡片+原链接；drop=仅文字卡片 */
-  kind: 'raw' | 'card' | 'link' | 'drop'
-  url?: string
-  token?: string
 }
 
 /** 处理出站视频（封面送审判定；命中后按 videoAction 处置） */

@@ -1,14 +1,20 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import type { Context } from 'koishi'
 import type { ParsedData, CustomPlatformConfig } from './types'
+import type { VideoParserHost } from './core/host'
+import { createHost } from './core/host'
+import type { VideoParserExtensions } from './core/extensions'
+import { createDefaultExtensions } from './extensions/default'
 import { SimpleLRUCache } from './utils/cache'
 import { parseFieldMapping } from './utils/field-mapping'
 import { BUILTIN_LINK_RULES } from './platforms/rules'
 import { buildCustomLinkRules } from './platforms/custom'
 
 export interface ParserRuntime {
-  ctx: Context
+  /** 宿主抽象（core 统一入口） */
+  host: VideoParserHost
+  /** 过渡期兼容字段：底层上下文（等同于 host.context） */
+  ctx: any
   config: any
   http: AxiosInstance
   proxyConfig: any
@@ -18,9 +24,14 @@ export interface ParserRuntime {
   contentDedupCache: SimpleLRUCache<number>
   customPlatforms: CustomPlatformConfig[]
   allRules: { pattern: RegExp; type: string }[]
+  /** 扩展能力（默认实现 + 宿主覆盖） */
+  extensions: VideoParserExtensions
 }
 
-export function createRuntime(ctx: Context, config: any): ParserRuntime {
+export function createRuntime(source: any, config: any): ParserRuntime {
+  const host = createHost(source)
+  const ctx = host.context
+  const extensions: VideoParserExtensions = { ...createDefaultExtensions(), ...(host.extensions || {}) }
   const dedupCache = new SimpleLRUCache<number>(1000, config.deduplicationInterval * 1000)
   const cacheTTL = (config.cacheTTL || 600) * 1000
   const urlCacheLocal = new SimpleLRUCache<{ data: ParsedData; expire: number }>(500, cacheTTL)
@@ -60,6 +71,7 @@ export function createRuntime(ctx: Context, config: any): ParserRuntime {
   const http: AxiosInstance = axios.create(axiosConfig)
 
   return {
+    host,
     ctx,
     config,
     http,
@@ -70,5 +82,6 @@ export function createRuntime(ctx: Context, config: any): ParserRuntime {
     contentDedupCache,
     customPlatforms,
     allRules,
+    extensions,
   }
 }

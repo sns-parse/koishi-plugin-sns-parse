@@ -19,7 +19,7 @@ export interface FerretTransformService {
 }
 
 export function getFerret(rt: ParserRuntime): FerretTransformService | null {
-  return ((rt.ctx as any)['ferret-transform'] as FerretTransformService | undefined) ?? null
+  return (rt.host.getService?.<FerretTransformService>('ferret-transform')) ?? null
 }
 
 /** 生成与 ferret 命令路径兼容的随机 token 及其对应 seed */

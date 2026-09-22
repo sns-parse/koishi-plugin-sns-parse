@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import axios from 'axios'
-import { createWriteStream, existsSync } from 'fs'
+import { createWriteStream, existsSync, readFileSync } from 'fs'
 import { mkdir, stat, writeFile } from 'fs/promises'
 import { join, resolve, extname } from 'path'
 import { linkTypeParser } from './utils/url'
@@ -9,12 +9,15 @@ import { createRuntime } from './runtime'
 import { getPlatformConfig } from './platforms/custom'
 import { parseUrl } from './engine/fetcher'
 import { generateFormattedText, formatDuration, formatPublishTime } from './utils/format'
-import { setVerboseLogging, debugLog } from './utils/logger'
+import { setLogger, consoleLogger, setVerboseLogging, debugLog } from './utils/logger'
 import { langName } from './utils/translate'
 import { mergeImages, type MergeLayout } from './utils/merge'
 import { shutdownTlsClient } from './utils/tls-client'
+import { createConfigEnvelope, serializeConfigEnvelope, parseConfigInput, mergeConfig } from './services/config-io'
 import type { Context } from 'koishi'
 import type { ParsedData } from './types'
+
+const PLUGIN_NAME = 'video-parser-all'
 
 // 与 config.ts 中 globalFieldMapping 默认值一致
 const DEFAULT_GLOBAL_FIELD_MAPPING = JSON.stringify({
@@ -43,6 +46,9 @@ interface CliArgs {
   mergeImages: boolean
   twitterAuthToken: string | undefined
   twitterCt0: string | undefined
+  exportConfig: boolean
+  includeSecrets: boolean
+  configFile: string | undefined
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -50,6 +56,7 @@ function parseArgs(argv: string[]): CliArgs {
     url: '', download: false, output: '.', json: false, info: false, debug: false,
     api: undefined, apiKey: undefined, proxy: undefined, dedicatedFirst: false,
     mergeImages: false, twitterAuthToken: undefined, twitterCt0: undefined,
+    exportConfig: false, includeSecrets: false, configFile: undefined,
   }
   const positional: string[] = []
   for (let i = 0; i < argv.length; i++) {
@@ -67,6 +74,9 @@ function parseArgs(argv: string[]): CliArgs {
       case '--merge-images': args.mergeImages = true; break
       case '--twitter-auth-token': args.twitterAuthToken = argv[++i]; break
       case '--twitter-ct0': args.twitterCt0 = argv[++i]; break
+      case '--export-config': args.exportConfig = true; break
+      case '--include-secrets': args.includeSecrets = true; break
+      case '--config': args.configFile = argv[++i]; break
       case '-v': case '--version': printVersion(); process.exit(0)
       case '-h': case '--help': printHelp(); process.exit(0)
       default:
@@ -103,6 +113,9 @@ koishi-plugin-video-parser-all CLI — 像 you-get 一样解析/下载视频
                          （低频趋势延续+纹理可验证性），取证据最强者；均不过逐张发送（需 ffmpeg）
   --twitter-auth-token <t>  X 登录态 auth_token（解析需登录推文；TLS 指纹由 tlsget-rs 处理，随包自动安装）
   --twitter-ct0 <t>         X 登录态 ct0（与 auth_token 配对，同时用作 csrf token）
+  --export-config        导出配置信封 JSON 到标准输出（默认脱敏；配合 --include-secrets 输出明文）
+  --include-secrets      配合 --export-config：输出密钥明文
+  --config <file>        从配置信封/配置 JSON 文件加载覆盖（与插件 parse/config import 同格式）
   --debug                开启调试日志（含同源合并证据链：候选布局逐缝趋势差/基线/比值/纹理与裁决理由）
   -v, --version          显示版本
   -h, --help             显示帮助
@@ -273,7 +286,24 @@ async function downloadAll(p: ParsedData, type: string, outDir: string, merged: 
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
+  setLogger(consoleLogger)
   if (args.debug) setVerboseLogging(true)
+
+  if (args.exportConfig) {
+    const cfg = buildConfig({
+      primaryApiUrl: args.api,
+      apiKey: args.apiKey || '',
+      platformDedicatedFirst: args.dedicatedFirst && args.url ? { [args.url]: true } : {},
+      proxy: args.proxy ? parseProxy(args.proxy) : { enabled: false },
+      debug: args.debug,
+      twitterAuthToken: args.twitterAuthToken,
+      twitterCt0: args.twitterCt0,
+    })
+    const env = createConfigEnvelope(cfg, { pluginName: PLUGIN_NAME, includeSecrets: args.includeSecrets })
+    process.stdout.write(serializeConfigEnvelope(env) + '\n')
+    process.exit(0)
+  }
+
   if (!args.url) { printHelp(); process.exit(1) }
 
   const matches = linkTypeParser(args.url, BUILTIN_LINK_RULES)
@@ -284,7 +314,7 @@ async function main(): Promise<void> {
   const { type, url } = matches[0]
   process.stdout.write(`▶ 平台: ${type}\n▶ 链接: ${url}\n▶ 正在解析...\n\n`)
 
-  const config = buildConfig({
+  let config = buildConfig({
     primaryApiUrl: args.api,
     apiKey: args.apiKey || '',
     platformDedicatedFirst: args.dedicatedFirst ? { [type]: true } : {},
@@ -293,6 +323,15 @@ async function main(): Promise<void> {
     twitterAuthToken: args.twitterAuthToken,
     twitterCt0: args.twitterCt0,
   })
+
+  if (args.configFile) {
+    try {
+      config = mergeConfig(config, parseConfigInput(readFileSync(args.configFile, 'utf8')).config)
+    } catch (e: any) {
+      console.error(`✗ 读取配置失败（${args.configFile}）：${e?.message || e}`)
+      process.exit(1)
+    }
+  }
 
   const ctx = {} as Context
   const rt = createRuntime(ctx, config)

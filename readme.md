@@ -44,6 +44,18 @@ This package is a fork with **independent semver + upstream baseline in build me
 | `parse <url>` | 手动解析指定的视频/图集链接 | `parse https://v.douyin.com/xxxx/` |
 | `parse/getvideo <token>`（别名 `取视频`） | 领取受限暂存视频（仅私聊，token 绑定请求者） | `取视频 ab12cd34…` |
 | `parse/diag` | 诊断 X/Twitter 登录态解析环境（cycletls），默认关闭 | `parse/diag` |
+| `parse/config export` | 导出当前配置信封 JSON（默认对密钥打码；加 `--include-secrets` 输出明文） | `parse/config export` |
+| `parse/config import <JSON\|路径>` | 导入配置信封/配置 JSON，写入覆盖文件并热应用 | `parse/config import ./old.json` |
+| `parse/config migrate <JSON\|路径>` | 同导入，用于旧命名空间 → 新命名空间迁移（附差异摘要） | `parse/config migrate ./old.json` |
+
+## 配置导入导出与命名空间迁移 (Config Export / Import)
+
+- **为什么需要**：新版包 `@sns-parse/koishi-plugin-sns-parse` 使用命名空间 `sns-parse`，与旧包 `@char46/koishi-plugin-video-parser-all`（命名空间 `video-parser-all`）不同，koishi 配置键随之不同，需显式迁移。
+- **命令**（命令根统一 `parse`，新旧包不可同时启用）：
+  - 旧包：`parse/config export --include-secrets`（默认脱敏，密钥显示为 `***`）
+  - 新包：`parse/config migrate <导出的 JSON 或文件路径>`
+- **持久化**：导入结果写入 `<baseDir>/data/<命名空间>/config.override.json`，启动时自动合并到 schema 配置之上；导入后立即热应用（初始化时构建的子系统建议重载插件后完全生效）。
+- **CLI 同能力**：`video-parser --export-config [--include-secrets]`、`video-parser <url> --config <file>`。
 
 ## 内容安全与图片混淆 (NSFW Moderation & Image Scramble)
 

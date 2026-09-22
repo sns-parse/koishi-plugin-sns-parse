@@ -1,16 +1,20 @@
 import type { Context } from 'koishi'
-import { h } from 'koishi'
+import { h, Logger } from 'koishi'
 import { name, Config } from './config'
-import { logger, debugLog, setVerboseLogging } from './utils/logger'
+import { logger, debugLog, setVerboseLogging, setLogger } from './utils/logger'
 import { getText } from './utils/common'
 import { linkTypeParser, extractAllUrlsFromMessage } from './utils/url'
 import { createRuntime } from './runtime'
 import { sendWithTimeout } from './sender/sender'
 import { flush } from './sender/flush'
 import { diagnoseTls } from './utils/tls-client'
-import { nsfwCapability } from './services/nsfw/gate'
 import { videoVault, configureVault } from './services/nsfw/vault'
 import { initModerationCache, flushModerationCache } from './services/nsfw/moderation/cache'
+import {
+  applyOverrideToConfig, createConfigEnvelope, serializeConfigEnvelope,
+  parseConfigInput, mergeConfig, diffKeys, writeOverride,
+} from './services/config-io'
+import { readFileSync } from 'fs'
 import { createHash } from 'crypto'
 
 export { name, Config }
@@ -20,17 +24,27 @@ export const inject = {
   optional: ['ferret-transform'],
 }
 
-export function apply(ctx: Context, config: any) {
+/**
+ * 生成某一命名空间下的插件 apply。新包（@sns-parse/koishi-plugin-sns-parse）
+ * 与旧包（@char46/koishi-plugin-video-parser-all）共用本实现，仅命名空间不同。
+ */
+export function createPlugin(pluginName: string) {
+  return function apply(ctx: Context, rawConfig: any) {
+  // 注入宿主日志实现：core 默认静默，Koishi 层绑定 Logger(pluginName)
+  setLogger(new Logger(pluginName))
+  const baseDir: string | undefined = (ctx as any).baseDir
+  // 启动时合并自管覆盖文件（配置导入导出的持久化载体）
+  const config = applyOverrideToConfig(rawConfig, baseDir, pluginName)
   setVerboseLogging(config.debug || false)
   logger.info('插件启动')
 
-  const rt = createRuntime(ctx, config)
+  let rt = createRuntime(ctx, config)
 
   // 内容安全子系统：按配置初始化 vault 与审核缓存（配置签名变更自动作废旧持久化结果）
   if (config.nsfwVault) configureVault(config.nsfwVault)
   const modSig = createHash('sha256').update(JSON.stringify(config.nsfwModeration || {})).digest('hex').slice(0, 16)
   initModerationCache((ctx as any).baseDir, modSig)
-  const cap = nsfwCapability(rt)
+  const cap = rt.extensions.capability?.(rt) ?? { ferret: false, moderation: null }
   ctx.logger.info(`内容安全能力：混淆${cap.ferret ? '可用（ferret-transform 服务已加载）' : '不可用（未检测到 koishi-plugin-ferret-transform-image，相关功能停用）'}；审核${cap.moderation ? `已启用（${cap.moderation}）` : '未配置'}`)
   // 易踩坑提示：配了审核 Provider 但模式全 off，审核不会执行
   if (cap.moderation) {
@@ -102,6 +116,35 @@ export function apply(ctx: Context, config: any) {
       }
     })
 
+  // 配置导出 / 导入 / 迁移（旧命名空间 → 新命名空间迁移用）
+  ctx.command('parse/config <action> [...payload]', '配置导出/导入/迁移')
+    .action(async (_argv, action: string, ...payload: string[]) => {
+      const payloadText = payload.join(' ').trim()
+      if (action === 'export') {
+        const includeSecrets = /--include-secrets/.test(payloadText)
+        const env = createConfigEnvelope(rt.config, { pluginName, includeSecrets })
+        return serializeConfigEnvelope(env)
+      }
+      if (action === 'import' || action === 'migrate') {
+        let text = payloadText.replace(/--include-secrets/g, '').trim()
+        if (!text) return `用法：parse/config ${action} <JSON 或文件路径>`
+        if (!text.startsWith('{') && !text.startsWith('[')) {
+          try { text = readFileSync(text, 'utf8') } catch { return `无法读取文件：${text}` }
+        }
+        let parsed: ReturnType<typeof parseConfigInput>
+        try { parsed = parseConfigInput(text) } catch (e: any) { return `导入失败：${e?.message || e}` }
+        const keys = diffKeys(rt.config, parsed.config)
+        const merged = mergeConfig(rt.config, parsed.config)
+        const file = writeOverride(baseDir, pluginName, merged, pluginName)
+        rt = createRuntime(ctx, merged)
+        setVerboseLogging(merged.debug || false)
+        const from = parsed.pluginName ? `（来源命名空间：${parsed.pluginName}）` : ''
+        const keyList = keys.length ? `，${keys.slice(0, 20).join('、')}${keys.length > 20 ? '…' : ''}` : ''
+        return `${action === 'migrate' ? '迁移' : '导入'}完成${from}：${keys.length} 项生效${keyList}。覆盖文件：${file}\n提示：初始化时构建的子系统（内容安全/审核缓存等）建议重载插件后完全生效。`
+      }
+      return '用法：parse/config export [--include-secrets] | import <JSON|路径> | migrate <JSON|路径>'
+    })
+
   if (config.enableDiagCommand) {
     ctx.command('parse/diag', '诊断 X 登录态解析环境（tlsget）').action(async ({ session }) => {
       await sendWithTimeout(rt, session, '开始诊断 tlsget 环境，约需 30 秒…')
@@ -133,4 +176,8 @@ export function apply(ctx: Context, config: any) {
   })
 
   logger.info('插件初始化完成')
+  }
 }
+
+/** 默认导出：旧命名空间 video-parser-all（保持既有用户配置命名空间不变） */
+export const apply = createPlugin(name)
