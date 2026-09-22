@@ -110,8 +110,8 @@ importers:
   .:
     dependencies:
       '@sns-parse/core':
-        specifier: ^0.3.0-alpha.1
-        version: 0.3.0-alpha.1
+        specifier: ^0.4.0-alpha.1
+        version: 0.4.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-gif':
         specifier: ^0.1.0-alpha.1
         version: 0.1.0-alpha.1(supports-color@8.1.1)
@@ -570,6 +570,10 @@ packages:
 
   '@sns-parse/core@0.3.0-alpha.1':
     resolution: {integrity: sha512-z/ZPrWq+tKdaGLxOSIsiwT5e9HkaauxvvEeDBwGLPlxnQsB5sq1p/hGfq3bRu/3/IK3t8S9UUf6IfYYqzEdRjg==}
+    engines: {node: '>=16.0.0'}
+
+  '@sns-parse/core@0.4.0-alpha.1':
+    resolution: {integrity: sha512-XDw8Ft7IazLmnrMMqOuZ4svL9E0In3HQA5f//R+3zBkN3NSDbltEhjf/S3AjRxdTScGGKUi54ys4GtpeO7ZTzw==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/ext-gif@0.1.0-alpha.1':
@@ -2138,6 +2142,18 @@ snapshots:
   '@sns-parse/core@0.2.0-alpha.1': {}
 
   '@sns-parse/core@0.3.0-alpha.1': {}
+
+  '@sns-parse/core@0.4.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+    dependencies:
+      axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      https-proxy-agent: 9.1.0(supports-color@8.1.1)
+    optionalDependencies:
+      '@char46/tlsget-rs': 1.0.9
+      ffmpeg-static: 5.3.0(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - debug
+      - kerberos
+      - supports-color
 
   '@sns-parse/ext-gif@0.1.0-alpha.1(supports-color@8.1.1)':
     dependencies:
