@@ -1,62 +1,223 @@
-export const BUILTIN_LINK_RULES: { pattern: RegExp; type: string }[] = [
-  { pattern: /https?:\/\/(?:www\.)?bilibili\.com\/video\/([ab]v[0-9a-zA-Z_-]+)(?:\?[^\s'"“”‘’]*)?/gi, type: 'bilibili' },
-  { pattern: /https?:\/\/b23\.tv\/[0-9a-zA-Z_\/-]+/gi, type: 'bilibili' },
-  { pattern: /https?:\/\/bili\d+\.cn\/[0-9a-zA-Z_\/-]+/gi, type: 'bilibili' },
-  { pattern: /https?:\/\/b23\.wtf\/[0-9a-zA-Z_\/-]+/gi, type: 'bilibili' },
-  { pattern: /https?:\/\/bili2233\.cn\/[0-9a-zA-Z_\/-]+/gi, type: 'bilibili' },
-  { pattern: /https?:\/\/(?:www\.)?douyin\.com\/video\/\d{10,}/gi, type: 'douyin' },
-  { pattern: /https?:\/\/v\.douyin\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'douyin' },
-  { pattern: /https?:\/\/(?:www\.)?kuaishou\.com\/short-video\/[0-9a-zA-Z_\/-]+/gi, type: 'kuaishou' },
-  { pattern: /https?:\/\/v\.kuaishou\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'kuaishou' },
-  { pattern: /https?:\/\/(?:www\.)?kuaishou\.com\/f\/[0-9a-zA-Z_\/-]+/gi, type: 'kuaishou' },
-  { pattern: /https?:\/\/(?:www\.)?xiaohongshu\.com\/discovery\/item\/[0-9a-zA-Z_\/-]+/gi, type: 'xiaohongshu' },
-  { pattern: /https?:\/\/xhslink\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'xiaohongshu' },
-  { pattern: /https?:\/\/(?:www\.)?xiaohongshu\.com\/explore\/[0-9a-zA-Z_\/-]+/gi, type: 'xiaohongshu' },
-  { pattern: /https?:\/\/(?:www\.)?xiaohongshu\.com\/board\/[0-9a-zA-Z_\/-]+/gi, type: 'xiaohongshu' },
-  { pattern: /https?:\/\/weibo\.com\/\d+\/[0-9a-zA-Z_\/-]+/gi, type: 'weibo' },
-  { pattern: /https?:\/\/video\.weibo\.com\/show\?fid=[0-9a-zA-Z_\/-]+/gi, type: 'weibo' },
-  { pattern: /https?:\/\/t\.cn\/[0-9a-zA-Z_\/-]+/gi, type: 'weibo' },
-  { pattern: /https?:\/\/m\.weibo\.cn\/[0-9a-zA-Z_\/-]+/gi, type: 'weibo' },
-  { pattern: /https?:\/\/(?:www\.)?ixigua\.com\/\d{10,}/gi, type: 'xigua' },
-  { pattern: /https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11}/gi, type: 'youtube' },
-  { pattern: /https?:\/\/youtu\.be\/[0-9a-zA-Z_\/-]+/gi, type: 'youtube' },
-  { pattern: /https?:\/\/(?:www\.)?youtube\.com\/shorts\/[0-9a-zA-Z_\/-]+/gi, type: 'youtube' },
-  { pattern: /https?:\/\/(?:www\.)?tiktok\.com\/@[\w.]+\/video\/\d{10,}/gi, type: 'tiktok' },
-  { pattern: /https?:\/\/vm\.tiktok\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'tiktok' },
-  { pattern: /https?:\/\/vt\.tiktok\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'tiktok' },
-  { pattern: /https?:\/\/(?:www\.)?acfun\.cn\/v\/ac\d{10,}/gi, type: 'acfun' },
-  { pattern: /https?:\/\/(?:www\.)?zhihu\.com\/video\/\d{10,}/gi, type: 'zhihu' },
-  { pattern: /https?:\/\/(?:www\.|m\.)?zhihu\.com\/question\/\d+\/answer\/\d+/gi, type: 'zhihu' },
-  { pattern: /https?:\/\/zhuanlan\.zhihu\.com\/p\/\d+/gi, type: 'zhihu' },
-  { pattern: /https?:\/\/(?:www\.|m\.)?zhihu\.com\/zvideo\/\d+/gi, type: 'zhihu' },
-  { pattern: /https?:\/\/weishi\.qq\.com\/weishi\/feed\/[0-9a-zA-Z_\/-]+/gi, type: 'weishi' },
-  { pattern: /https?:\/\/(?:www\.)?huya\.com\/video\/[0-9a-zA-Z_\/-]+/gi, type: 'huya' },
-  { pattern: /https?:\/\/haokan\.baidu\.com\/v\?vid=[0-9a-zA-Z_\/-]+/gi, type: 'haokan' },
-  { pattern: /https?:\/\/(?:www\.)?meipai\.com\/media\/\d{10,}/gi, type: 'meipai' },
-  { pattern: /https?:\/\/twitter\.com\/\w+\/status\/\d{10,}/gi, type: 'twitter' },
-  { pattern: /https?:\/\/x\.com\/\w+\/status\/\d{10,}/gi, type: 'twitter' },
-  { pattern: /https?:\/\/(?:www\.)?instagram\.com\/p\/[0-9a-zA-Z_\/-]+/gi, type: 'instagram' },
-  { pattern: /https?:\/\/(?:www\.)?instagram\.com\/reel\/[0-9a-zA-Z_\/-]+/gi, type: 'instagram' },
-  { pattern: /https?:\/\/(?:www\.)?instagram\.com\/share\/(?:reel|p)\/[0-9a-zA-Z_\/-]+/gi, type: 'instagram' },
-  { pattern: /https?:\/\/(?:www\.)?doubao\.com\/video\/\d{10,}/gi, type: 'doubao' },
-  { pattern: /https?:\/\/(?:www\.)?doubao\.com\/video-sharing\?[^\s'"“”‘’]*/gi, type: 'doubao' },
-  { pattern: /https?:\/\/(?:www\.)?doubao\.com\/thread\/[^\s'"“”‘’]+/gi, type: 'doubao_image' },
-  { pattern: /https?:\/\/(?:www\.)?jimeng\.jianying\.com\/[^\s'"“”‘’]*/gi, type: 'jimeng' },
-  { pattern: /https?:\/\/(?:www\.)?jimeng\.cn\/[^\s'"“”‘’]*/gi, type: 'jimeng' },
-  { pattern: /https?:\/\/(?:www\.)?dreamina\.jianying\.com\/[^\s'"“”‘’]*/gi, type: 'jimeng' },
-  { pattern: /https?:\/\/(?:www\.)?dreamina\.capcut\.com\/[^\s'"“”‘’]*/gi, type: 'jimeng' },
-  { pattern: /https?:\/\/(?:www\.)?oasis\.weibo\.com\/v\/[0-9a-zA-Z_\/-]+/gi, type: 'oasis' },
-  { pattern: /https?:\/\/channels\.weixin\.qq\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'wechat_channel' },
-  { pattern: /https?:\/\/weixin\.qq\.com\/sph\/[0-9a-zA-Z_\/-]+/gi, type: 'wechat_channel' },
-  { pattern: /https?:\/\/(?:www\.)?pearvideo\.com\/video_\d+/gi, type: 'lishi' },
-  { pattern: /https?:\/\/video\.li\/[0-9a-zA-Z_\/-]+/gi, type: 'lishi' },
-  { pattern: /https?:\/\/(?:www\.)?quanmin\.tv\/[0-9a-zA-Z_\/-]+/gi, type: 'quanmin' },
-  { pattern: /https?:\/\/(?:www\.)?quanmintv\.cn\/[0-9a-zA-Z_\/-]+/gi, type: 'quanmin' },
-  { pattern: /https?:\/\/h5\.pipigx\.com\/pp\/post\/\d+/gi, type: 'pipigx' },
-  { pattern: /https?:\/\/(?:www\.)?ippzone\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'pipigx' },
-  { pattern: /https?:\/\/(?:h5|www)\.pipix\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'pipixia' },
-  { pattern: /https?:\/\/(?:www\.)?pipixia\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'pipixia' },
-  { pattern: /https?:\/\/share\.xiaochuankeji\.cn\/hybrid\/share\/post\?pid=\d+/gi, type: 'zuiyou' },
-  { pattern: /https?:\/\/(?:h5|www)\.izuiyou\.com\/[0-9a-zA-Z_\/-]+/gi, type: 'zuiyou' },
-  { pattern: /https?:\/\/(?:www\.|m\.)?toutiao\.com\/video\/\d+/gi, type: 'toutiao' },
+/**
+ * 内置平台定义（按平台自包含：链接规则 + 专属 API）。
+ *
+ * 聚合导出 BUILTIN_LINK_RULES 供链接识别使用；
+ * 后续拆分「每平台一个包」时，直接以本数组的元素为单位迁移。
+ */
+import type { PlatformDefinition } from '../core/platform'
+
+export const BUILTIN_PLATFORMS: PlatformDefinition[] = [
+  {
+    type: 'bilibili',
+    rules: [
+      /https?:\/\/(?:www\.)?bilibili\.com\/video\/([ab]v[0-9a-zA-Z_-]+)(?:\?[^\s'"“”‘’]*)?/gi,
+      /https?:\/\/b23\.tv\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/bili\d+\.cn\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/b23\.wtf\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/bili2233\.cn\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/bilibili', next: 'https://api-new.ifphp.com/api/bilibili' },
+  },
+  {
+    type: 'douyin',
+    rules: [
+      /https?:\/\/(?:www\.)?douyin\.com\/video\/\d{10,}/gi,
+      /https?:\/\/v\.douyin\.com\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/douyin', next: 'https://api-new.ifphp.com/api/dyjx' },
+  },
+  {
+    type: 'kuaishou',
+    rules: [
+      /https?:\/\/(?:www\.)?kuaishou\.com\/short-video\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/v\.kuaishou\.com\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?kuaishou\.com\/f\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/kuaishou', next: 'https://api-new.ifphp.com/api/ksjx' },
+  },
+  {
+    type: 'xiaohongshu',
+    rules: [
+      /https?:\/\/(?:www\.)?xiaohongshu\.com\/discovery\/item\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/xhslink\.com\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?xiaohongshu\.com\/explore\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?xiaohongshu\.com\/board\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/xhs' },
+  },
+  {
+    type: 'weibo',
+    rules: [
+      /https?:\/\/weibo\.com\/\d+\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/video\.weibo\.com\/show\?fid=[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/t\.cn\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/m\.weibo\.cn\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/weibo' },
+  },
+  {
+    type: 'xigua',
+    rules: [
+      /https?:\/\/(?:www\.)?ixigua\.com\/\d{10,}/gi,
+    ],
+  },
+  {
+    type: 'youtube',
+    rules: [
+      /https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11}/gi,
+      /https?:\/\/youtu\.be\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?youtube\.com\/shorts\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'tiktok',
+    rules: [
+      /https?:\/\/(?:www\.)?tiktok\.com\/@[\w.]+\/video\/\d{10,}/gi,
+      /https?:\/\/vm\.tiktok\.com\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/vt\.tiktok\.com\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'acfun',
+    rules: [
+      /https?:\/\/(?:www\.)?acfun\.cn\/v\/ac\d{10,}/gi,
+    ],
+  },
+  {
+    type: 'zhihu',
+    rules: [
+      /https?:\/\/(?:www\.)?zhihu\.com\/video\/\d{10,}/gi,
+      /https?:\/\/(?:www\.|m\.)?zhihu\.com\/question\/\d+\/answer\/\d+/gi,
+      /https?:\/\/zhuanlan\.zhihu\.com\/p\/\d+/gi,
+      /https?:\/\/(?:www\.|m\.)?zhihu\.com\/zvideo\/\d+/gi,
+    ],
+  },
+  {
+    type: 'weishi',
+    rules: [
+      /https?:\/\/weishi\.qq\.com\/weishi\/feed\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'huya',
+    rules: [
+      /https?:\/\/(?:www\.)?huya\.com\/video\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/huya' },
+  },
+  {
+    type: 'haokan',
+    rules: [
+      /https?:\/\/haokan\.baidu\.com\/v\?vid=[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'meipai',
+    rules: [
+      /https?:\/\/(?:www\.)?meipai\.com\/media\/\d{10,}/gi,
+    ],
+  },
+  {
+    type: 'twitter',
+    rules: [
+      /https?:\/\/twitter\.com\/\w+\/status\/\d{10,}/gi,
+      /https?:\/\/x\.com\/\w+\/status\/\d{10,}/gi,
+    ],
+  },
+  {
+    type: 'instagram',
+    rules: [
+      /https?:\/\/(?:www\.)?instagram\.com\/p\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?instagram\.com\/reel\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?instagram\.com\/share\/(?:reel|p)\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'doubao',
+    rules: [
+      /https?:\/\/(?:www\.)?doubao\.com\/video\/\d{10,}/gi,
+      /https?:\/\/(?:www\.)?doubao\.com\/video-sharing\?[^\s'"“”‘’]*/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/dbvideos', next: 'https://api-new.ifphp.com/api/doubao' },
+  },
+  {
+    type: 'doubao_image',
+    rules: [
+      /https?:\/\/(?:www\.)?doubao\.com\/thread\/[^\s'"“”‘’]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/dbduihua' },
+  },
+  {
+    type: 'jimeng',
+    rules: [
+      /https?:\/\/(?:www\.)?jimeng\.jianying\.com\/[^\s'"“”‘’]*/gi,
+      /https?:\/\/(?:www\.)?jimeng\.cn\/[^\s'"“”‘’]*/gi,
+      /https?:\/\/(?:www\.)?dreamina\.jianying\.com\/[^\s'"“”‘’]*/gi,
+      /https?:\/\/(?:www\.)?dreamina\.capcut\.com\/[^\s'"“”‘’]*/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/jimengai', next: 'https://api-new.ifphp.com/api/jimeng' },
+  },
+  {
+    type: 'oasis',
+    rules: [
+      /https?:\/\/(?:www\.)?oasis\.weibo\.com\/v\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'wechat_channel',
+    rules: [
+      /https?:\/\/channels\.weixin\.qq\.com\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/weixin\.qq\.com\/sph\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/wxsph', next: 'https://api-new.ifphp.com/api/wxsph' },
+  },
+  {
+    type: 'lishi',
+    rules: [
+      /https?:\/\/(?:www\.)?pearvideo\.com\/video_\d+/gi,
+      /https?:\/\/video\.li\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'quanmin',
+    rules: [
+      /https?:\/\/(?:www\.)?quanmin\.tv\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?quanmintv\.cn\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+  },
+  {
+    type: 'pipigx',
+    rules: [
+      /https?:\/\/h5\.pipigx\.com\/pp\/post\/\d+/gi,
+      /https?:\/\/(?:www\.)?ippzone\.com\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/pipigx', next: 'https://api-new.ifphp.com/api/pipigx' },
+  },
+  {
+    type: 'pipixia',
+    rules: [
+      /https?:\/\/(?:h5|www)\.pipix\.com\/[0-9a-zA-Z_\/-]+/gi,
+      /https?:\/\/(?:www\.)?pipixia\.com\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/pipixia' },
+  },
+  {
+    type: 'zuiyou',
+    rules: [
+      /https?:\/\/share\.xiaochuankeji\.cn\/hybrid\/share\/post\?pid=\d+/gi,
+      /https?:\/\/(?:h5|www)\.izuiyou\.com\/[0-9a-zA-Z_\/-]+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/zuiyou' },
+  },
+  {
+    type: 'toutiao',
+    rules: [
+      /https?:\/\/(?:www\.|m\.)?toutiao\.com\/video\/\d+/gi,
+    ],
+    dedicated: { legacy: 'https://api.bugpk.com/api/toutiao' },
+  },
 ]
+
+/** 扁平规则表（链接识别用；保持既有导出名） */
+export const BUILTIN_LINK_RULES: { pattern: RegExp; type: string }[] =
+  BUILTIN_PLATFORMS.flatMap(p => p.rules.map(pattern => ({ pattern, type: p.type })))
