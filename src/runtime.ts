@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 import type { Context } from 'koishi'
 import type { ParsedData, CustomPlatformConfig } from './types'
 import { SimpleLRUCache } from './utils/cache'
@@ -48,15 +49,13 @@ export function createRuntime(ctx: Context, config: any): ParserRuntime {
     }
   }
   if (proxyConfig.enabled && proxyConfig.host) {
-    axiosConfig.proxy = {
-      protocol: proxyConfig.protocol || 'http',
-      host: proxyConfig.host,
-      port: proxyConfig.port || 7890,
-      auth: proxyConfig.auth?.username ? {
-        username: proxyConfig.auth.username,
-        password: proxyConfig.auth.password || ''
-      } : undefined
-    }
+    // axios 内置 proxy 选项对 https 目标存在不做 CONNECT 隧道的经典缺陷，
+    // 改用 https-proxy-agent 显式代理（按请求生效，不污染全局 env）
+    const proxyUrl = `${proxyConfig.protocol || 'http'}://${proxyConfig.auth?.username ? `${encodeURIComponent(proxyConfig.auth.username)}:${encodeURIComponent(proxyConfig.auth.password || '')}@` : ''}${proxyConfig.host}:${proxyConfig.port || 7890}`
+    const agent = new HttpsProxyAgent(proxyUrl)
+    axiosConfig.httpAgent = agent
+    axiosConfig.httpsAgent = agent
+    axiosConfig.proxy = false
   }
   const http: AxiosInstance = axios.create(axiosConfig)
 
