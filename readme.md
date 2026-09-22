@@ -182,7 +182,7 @@ Public tweets use the syndication API with zero config. **Login-required tweets*
 |----------------|-------------|-------------------|---------------------|
 | `apiKey` | string | ''（空） | api-new.ifphp.com 网关 API Key。[注册获取](https://api-new.ifphp.com/auth/login) |
 
-- **配置了 `apiKey`** → 自动切换到新网关 `api-new.ifphp.com`（主 API `/api/svparse` + B站/抖音/快手/视频号/豆包/皮皮搞笑专属端点），所有请求携带 `X-API-Key` 头
+- **配置了 `apiKey`** → 自动切换到新网关 `api-new.ifphp.com`（主 API `/api/svparse` + B站/抖音/快手/视频号/豆包/即梦/皮皮搞笑专属端点），所有请求携带 `X-API-Key` 头；**新网关失败（5xx/无专属端点/返回空）时自动追加旧网关末位兜底**（专属端点→主→备用），避免新网关单点故障导致全平台不可用
 - **未配置** → 继续使用旧网关 `api.bugpk.com`（无需 Key，行为与 v1.5.8 相同）。注意：旧网关将逐步停止解析能力，建议尽早配置 `apiKey`
 - X/Twitter 解析不受网关影响（始终走原生 syndication/GraphQL）
 
