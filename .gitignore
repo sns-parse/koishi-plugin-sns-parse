@@ -16,3 +16,14 @@ tsconfig.tsbuildinfo
 *.ntvs*
 *.njsproj
 *.sln
+
+b.out
+b.err
+vt.out
+vt.err
+pb.out
+pb.err
+rt.out
+rt.err
+tsc.out
+tsc.err
