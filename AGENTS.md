@@ -40,3 +40,23 @@
 - **充分利用语义化版本**：区分 patch / minor / major，让版本号如实反映变更性质与稳定程度。
 - **恰当使用预发布版本**：功能尚未稳定时发 `alpha` / `beta` / `rc`（如 `1.14.0-beta.1`），不要未稳定就发正式 minor。
 - **恰当使用其他 metadata**：如 `+upstream.X.Y.Z` build 段标注所跟随的上游基线版本。
+- 现阶段统一使用先行版本 + build metadata（如 `0.2.0-alpha.1+upstream.1.6.7`）；聚合包自动装全部碎片包。
+
+## sns-parse 分层发布状态 (Published Packages)
+
+- npm scope `@sns-parse` 与 GitHub org `sns-parse`（char-46 为 admin）：
+  - `@sns-parse/core`：契约 + 配置 DSL + 平台配置聚合（`0.3.0-alpha.1+upstream.1.6.7`）
+  - `@sns-parse/ext-nsfw|ext-merge|ext-translate|ext-gif` + `@sns-parse/extensions`（纯依赖聚合）
+  - `@sns-parse/platform-<type>` ×27 + `@sns-parse/platforms`（纯依赖聚合）
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层，命名空间 `sns-parse`，动态配置
+  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（转发新包，迁移非强制）
+- 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 仅 `dependencies` 自动装全部碎片包，**不 re-export**；碎片包可自选安装。
+- 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
+- Koishi 仓库不 monorepo；通过 npm 依赖 + git submodule（`vendor/{core,extensions,platforms}`）管理。
+- 发布限制：bypass 2FA 的 granular token **不能 `unpublish`**，只能用 `deprecate`/`dist-tag` 纠正；彻底删除需 npm 网页。
+
+## 待办 (TODO)
+
+- **CLI 兼容层 `@sns-parse/cli`**：需先把引擎（`engine/fetcher`、`engine/parser`、`utils/{format,url,cache,concurrency,field-mapping,common,tls-client}`）下沉到 `@sns-parse/core` 并发布，再建独立 CLI 仓库；同样从 core 取配置声明。
+- **运行时实现切换**：koishi 运行时当前仍用本地实现（测试依赖本地 `nsfw/vault` 单例）；后续切换为 `ext-*` 包实现并同步测试。
+- 旧包 `@sns-parse/extensions@0.1.0`（实现版）已 `deprecate`；如需移除请在 npm 网页操作。
