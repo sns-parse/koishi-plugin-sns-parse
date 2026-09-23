@@ -1,24 +1,17 @@
 /**
- * 内置扩展实现装配：把 NSFW(ext-nsfw)、同源合并(ext-merge)、
- * 翻译(ext-translate)、GIF(ext-gif) 组装为 core 契约的默认实现。
+ * 默认扩展装配（薄组合）：
+ * - 引擎自带实现（merge/GIF/translate）来自 @sns-parse/core 的 createCoreExtensions
+ * - NSFW（审核/混淆/暂存）来自 @sns-parse/ext-nsfw
  *
  * 宿主可用自己的 VideoParserExtensions 覆盖其中任意一项。
- * 后续拆分仓库时，本文件即 @sns-parse/extensions 的入口。
  */
+import { createCoreExtensions } from '@sns-parse/core'
 import type { VideoParserExtensions } from '../core/extensions'
-import { processImage, processVideo, processMergedImage, nsfwCapability } from '../services/nsfw/gate'
-import { mergeImages } from '../utils/merge'
-import { mp4ToGif } from '../utils/gif'
-import { translateText } from '../utils/translate'
+import { nsfwExtension } from '@sns-parse/ext-nsfw'
 
 export function createDefaultExtensions(): VideoParserExtensions {
   return {
-    mergeImages,
-    processImage,
-    processVideo,
-    processMergedImage,
-    mp4ToGif,
-    translate: translateText,
-    capability: nsfwCapability,
+    ...createCoreExtensions(),
+    ...nsfwExtension(),
   }
 }

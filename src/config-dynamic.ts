@@ -35,9 +35,23 @@ function fieldToSchema(f: ConfigField): any {
       }))
       break
     case 'array':
-      s = f.itemFields
-        ? Schema.array(Schema.object(Object.fromEntries(f.itemFields.map(c => [c.key, fieldToSchema(c)]))))
-        : Schema.array(Schema.any())
+      if (f.itemFields) {
+        s = Schema.array(Schema.object(Object.fromEntries(f.itemFields.map(c => [c.key, fieldToSchema(c)]))))
+      } else if (f.itemType === 'string') {
+        s = Schema.array(Schema.string())
+      } else if (f.itemType === 'number') {
+        s = Schema.array(Schema.number())
+      } else if (f.itemType === 'boolean') {
+        s = Schema.array(Schema.boolean())
+      } else if (f.itemType === 'union') {
+        s = Schema.array(Schema.union((f.values || []).map(v => {
+          let c = Schema.const(v.value)
+          if (v.description) c = c.description(v.description)
+          return c
+        })))
+      } else {
+        s = Schema.array(Schema.any())
+      }
       break
     case 'object':
       s = Schema.object(Object.fromEntries((f.fields || []).map(c => [c.key, fieldToSchema(c)])))
@@ -47,6 +61,7 @@ function fieldToSchema(f: ConfigField): any {
   }
   if (f.description) s = s.description(f.description)
   if (f.hidden) s = s.hidden()
+  if (f.required) s = s.required()
   if (f.default !== undefined) s = s.default(f.default)
   return s
 }

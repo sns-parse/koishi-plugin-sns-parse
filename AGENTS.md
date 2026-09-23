@@ -39,17 +39,18 @@
 
 - **充分利用语义化版本**：区分 patch / minor / major，让版本号如实反映变更性质与稳定程度。
 - **恰当使用预发布版本**：功能尚未稳定时发 `alpha` / `beta` / `rc`（如 `1.14.0-beta.1`），不要未稳定就发正式 minor。
+- **0.x/先行阶段的 minor 纪律**：alpha 阶段每个包固定一个目标 minor，迭代只刷 `alpha.N`；minor 只留给真正的 API 破坏性变更，且当次必须同步全链路依赖范围（0.x 的 `^` 钉死 minor，core 涨 minor 会让所有 ext-*/platform-* 范围失效 → 嵌套多份 core 实例、logger 单例分裂，2026-09 全链路重发 ext-* 就是这账单）。
 - **恰当使用其他 metadata**：如 `+upstream.X.Y.Z` build 段标注所跟随的上游基线版本。
 - 现阶段统一使用先行版本 + build metadata（如 `0.2.0-alpha.1+upstream.1.6.7`）；聚合包自动装全部碎片包。
 
 ## sns-parse 分层发布状态 (Published Packages)
 
 - npm scope `@sns-parse` 与 GitHub org `sns-parse`（char-46 为 admin）：
-  - `@sns-parse/core`：契约 + 配置 DSL + **解析引擎**（`0.4.0-alpha.1+upstream.1.6.7`；fetcher/parser/translate/twitter/merge/gif/tls-client/config-io/registry/动态运行时 `createRuntime(source, config, {defs, defaultExtensions})`；`defaultsFromContributions` 供无 Schema 宿主取默认值）
-  - `@sns-parse/ext-nsfw|ext-merge|ext-translate|ext-gif` + `@sns-parse/extensions`（纯依赖聚合）
+  - `@sns-parse/core`：契约 + 配置 DSL + **解析引擎** + **引擎配置声明**（`0.4.0-alpha.4+upstream.1.6.7`；fetcher/parser/translate/twitter/merge/gif/tls-client/config-io/registry/动态运行时 `createRuntime(source, config, {defs, defaultExtensions})`/`createCoreExtensions()`/`defaultsFromContributions`/`engineConfigContributions()`；X 长推 syndication 截断时登录态 GraphQL 全文回退）
+  - `@sns-parse/ext-nsfw|ext-merge|ext-translate|ext-gif` + `@sns-parse/extensions`（纯依赖聚合；均对齐 core `^0.4.0-alpha.1` 单实例；ext-nsfw 顶层导出含 moderation/cache）
   - `@sns-parse/platform-<type>` ×27 + `@sns-parse/platforms`（纯依赖聚合）
-  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层，命名空间 `sns-parse`，动态配置（`1.20.0-alpha.2+upstream.1.6.7` 引擎已切 core）
-  - `@sns-parse/cli`：CLI 兼容层（`0.1.0-alpha.1+upstream.1.6.7`，仓库 `sns-parse/cli`；bin `sns-parse` / `video-parser`；引擎与配置声明来自 core + 已安装碎片包；smoke 测试 tsx）
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层，命名空间 `sns-parse`，动态配置（`1.20.0-alpha.4+upstream.1.6.7` 引擎与扩展实现均来自外部包）
+  - `@sns-parse/cli`：CLI 兼容层（`0.1.0-alpha.2+upstream.1.6.7`，仓库 `sns-parse/cli`；bin `sns-parse` / `video-parser`；默认值 = 引擎+扩展+平台声明，无硬编码基线）
   - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（转发新包，迁移非强制）
 - 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 仅 `dependencies` 自动装全部碎片包，**不 re-export**；碎片包可自选安装。
 - 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
@@ -58,7 +59,8 @@
 
 ## 待办 (TODO)
 
-- **运行时实现切换**：koishi 运行时引擎（fetcher/parser/translate/twitter/merge/gif/tls-client/config-io）已切换为 `@sns-parse/core@0.4.0`（本仓库 19 处 shim 重导出 + runtime 包装注入）；剩余 `services/nsfw`、`extensions/default` 装配仍为本地实现，后续切换为 `ext-*` 包实现并同步测试。
+- **运行时实现切换已完成（2026-09）**：koishi 引擎与扩展实现全部来自外部包——引擎 `@sns-parse/core`（19 处 shim 重导出 + runtime 包装），NSFW/合并/翻译/GIF 经 `createCoreExtensions() + nsfwExtension()` 装配（`src/services/nsfw/*` 仅剩 ext-nsfw 的路径兼容 shim）；配置组全量 DSL 化（引擎组来自 core `engineConfigContributions()`，koishi 层仅剩「基本设置」）。
+- tag 触发的 CI 发布（含发布后自动 npmmirror 同步）尚未演练过：push 一个 `v*` tag 即可验证。
 - 旧包 `@sns-parse/extensions@0.1.0`（实现版）已 `deprecate`；如需移除请在 npm 网页操作。
 
 ## pnpm 工具链 (Toolchain)

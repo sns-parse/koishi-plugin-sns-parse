@@ -110,20 +110,20 @@ importers:
   .:
     dependencies:
       '@sns-parse/core':
-        specifier: ^0.4.0-alpha.1
-        version: 0.4.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.4.0-alpha.3
+        version: 0.4.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-gif':
-        specifier: ^0.1.0-alpha.1
-        version: 0.1.0-alpha.1(supports-color@8.1.1)
+        specifier: ^0.1.0-alpha.2
+        version: 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-merge':
-        specifier: ^0.1.0-alpha.1
-        version: 0.1.0-alpha.1(supports-color@8.1.1)
+        specifier: ^0.1.0-alpha.2
+        version: 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-nsfw':
-        specifier: ^0.2.0-alpha.1
-        version: 0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.2.0-alpha.2
+        version: 0.2.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-translate':
-        specifier: ^0.1.0-alpha.1
-        version: 0.1.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.1.0-alpha.2
+        version: 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platforms':
         specifier: ^0.2.0-alpha.1
         version: 0.2.0-alpha.1
@@ -560,36 +560,28 @@ packages:
   '@satorijs/protocol@1.7.0':
     resolution: {integrity: sha512-ODSBVzdn7s9tw3XGFGYZ1MnjbA1jctwSleJTsyk/lAjyNziOFKNP5nIBAcw0r547dvXBweZNudnCqod6Ts+hqw==}
 
-  '@sns-parse/core@0.1.0':
-    resolution: {integrity: sha512-eYGhtV99+EWtgjUgGyaLXDnGDJ22gaHkR3EKuZUNDs3lB45qJuKe6C+hLTEY/e/7yD2fkFu+PTcHcmdiR0acBg==}
-    engines: {node: '>=16.0.0'}
-
-  '@sns-parse/core@0.2.0-alpha.1':
-    resolution: {integrity: sha512-qbmF82dRncMseRVJici/9LZtwYPOSaLH5ECyd/xPDRYyYhCJiJlz/edcp+BQ6B7nLK1gGIcO3045naPO/FoUkA==}
-    engines: {node: '>=16.0.0'}
-
   '@sns-parse/core@0.3.0-alpha.1':
     resolution: {integrity: sha512-z/ZPrWq+tKdaGLxOSIsiwT5e9HkaauxvvEeDBwGLPlxnQsB5sq1p/hGfq3bRu/3/IK3t8S9UUf6IfYYqzEdRjg==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/core@0.4.0-alpha.1':
-    resolution: {integrity: sha512-XDw8Ft7IazLmnrMMqOuZ4svL9E0In3HQA5f//R+3zBkN3NSDbltEhjf/S3AjRxdTScGGKUi54ys4GtpeO7ZTzw==}
+  '@sns-parse/core@0.4.0-alpha.3':
+    resolution: {integrity: sha512-ho4xvksXGgVJFreYt4qNoTzwFiYmQl0dnCOSm9raB4WR5u1uxXHO0t67XxgspaqO3+Cx6IQKF+QF0QI0XXKiTA==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-gif@0.1.0-alpha.1':
-    resolution: {integrity: sha512-DXPpDvfbPFtI+qrq5+LATWlo1hkWT9ohMfu455/fzsg4Me/fnWFvhrjJ/SWNHgn7Uz3PgENsl0fJsGwlIR3FwA==}
+  '@sns-parse/ext-gif@0.1.0-alpha.2':
+    resolution: {integrity: sha512-IFArauhy2FpnVXfRkvuAVnFxR8ShivYDW/jO1yfq+6LzY0D8bUwzTvB+jn+jstmvt0YZUmMZTMtws6lze4NIsg==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-merge@0.1.0-alpha.1':
-    resolution: {integrity: sha512-yuC4goEa71bHrNN9JtTzel2yuCyDyZm0neSpcYAhJiOjloZPKbAWwOHuWY4RWYb/IMFjAiV89B7lDNhrCljoEA==}
+  '@sns-parse/ext-merge@0.1.0-alpha.2':
+    resolution: {integrity: sha512-3KkEe1C9p+njR9SeDVOCGkiNphX2Xb1cdaj/RVWkr3Jjv+htd6f2z6vHUWMl+LVaBLCI9OiklPFgmuDr2k1RfQ==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-nsfw@0.2.0-alpha.1':
-    resolution: {integrity: sha512-r6fXjptah6fH6TBYfUgmw9Ppfy5rGRrwCd/uN8zQSaGGr1aPM+nJeS9t6u6psuwPd/Ibx52DHhpE63YreNgv8g==}
+  '@sns-parse/ext-nsfw@0.2.0-alpha.2':
+    resolution: {integrity: sha512-bUKQ0crQe2kmUwOri+jVhyjysL0fqU0BMS+FqNjZRDcldKzV1wju9r5gcZ7zcUHthr4S0kIDJmiJeA78KXpLyg==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-translate@0.1.0-alpha.1':
-    resolution: {integrity: sha512-NBIqIdsaw50J8vvyVrqCT8JPU5ppqqhIy8FxYeCW26AdfJBhEPIijCv8HeNnRpay4sLTsm/kO/RiHEWV7nFn6Q==}
+  '@sns-parse/ext-translate@0.1.0-alpha.2':
+    resolution: {integrity: sha512-h3B4YcRFhwPF8QvqMh3IGdWvhLbTK9csnRl/tn0amQqXUVu4Me+wPHQb0Hba3rSy87FaeSYnNx6D4u24/93uEg==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/platform-acfun@0.2.0-alpha.1':
@@ -829,10 +821,6 @@ packages:
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
-
-  agent-base@9.0.0:
-    resolution: {integrity: sha512-TQf59BsZnytt8GdJKLPfUZ54g/iaUL2OWDSFCCvMOhsHduDQxO8xC4PNeyIkVcA5KwL2phPSv0douC0fgWzmnA==}
-    engines: {node: '>= 20'}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -1183,10 +1171,6 @@ packages:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
 
-  https-proxy-agent@9.1.0:
-    resolution: {integrity: sha512-ag87y7cJJ9/3+GxFr8Oy4O5faDsGRGnBGsJj/YjOSsSx/5eadKLYTMPlzuR6obgoCDDm0abAAZitXXQkMOPSpA==}
-    engines: {node: '>= 20'}
-
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
     engines: {node: '>=0.10.0'}
@@ -1455,15 +1439,6 @@ packages:
   progress@2.0.3:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
     engines: {node: '>=0.4.0'}
-
-  proxy-agent-negotiate@1.1.0:
-    resolution: {integrity: sha512-N8IBcM3UgCVzz2L2Lqv8DVntDnnC8/hiV4nEDUPkqq72TPUgYWjQc+bdZlBPZK9LzPAvOY//gAt0S0DApoOXWQ==}
-    engines: {node: '>= 20'}
-    peerDependencies:
-      kerberos: ^2.0.0
-    peerDependenciesMeta:
-      kerberos:
-        optional: true
 
   proxy-from-env@2.1.0:
     resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
@@ -2137,52 +2112,49 @@ snapshots:
       '@satorijs/element': 3.2.0
       cosmokit: 1.8.1
 
-  '@sns-parse/core@0.1.0': {}
-
-  '@sns-parse/core@0.2.0-alpha.1': {}
-
   '@sns-parse/core@0.3.0-alpha.1': {}
 
-  '@sns-parse/core@0.4.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/core@0.4.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      https-proxy-agent: 9.1.0(supports-color@8.1.1)
+      https-proxy-agent: 5.0.1(supports-color@8.1.1)
     optionalDependencies:
       '@char46/tlsget-rs': 1.0.9
       ffmpeg-static: 5.3.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
-      - kerberos
       - supports-color
 
-  '@sns-parse/ext-gif@0.1.0-alpha.1(supports-color@8.1.1)':
+  '@sns-parse/ext-gif@0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.1.0
+      '@sns-parse/core': 0.4.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
       ffmpeg-static: 5.3.0(supports-color@8.1.1)
     transitivePeerDependencies:
+      - debug
       - supports-color
 
-  '@sns-parse/ext-merge@0.1.0-alpha.1(supports-color@8.1.1)':
+  '@sns-parse/ext-merge@0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.1.0
-      '@sns-parse/ext-gif': 0.1.0-alpha.1(supports-color@8.1.1)
+      '@sns-parse/core': 0.4.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/ext-gif': 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
       ffmpeg-static: 5.3.0(supports-color@8.1.1)
     transitivePeerDependencies:
+      - debug
       - supports-color
 
-  '@sns-parse/ext-nsfw@0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/ext-nsfw@0.2.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.2.0-alpha.1
+      '@sns-parse/core': 0.4.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
-  '@sns-parse/ext-translate@0.1.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/ext-translate@0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.1.0
+      '@sns-parse/core': 0.4.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
@@ -2491,8 +2463,6 @@ snapshots:
       - supports-color
 
   agent-base@7.1.4: {}
-
-  agent-base@9.0.0: {}
 
   ansi-regex@5.0.1: {}
 
@@ -2871,15 +2841,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  https-proxy-agent@9.1.0(supports-color@8.1.1):
-    dependencies:
-      agent-base: 9.0.0
-      debug: 4.4.3(supports-color@8.1.1)
-      proxy-agent-negotiate: 1.1.0
-    transitivePeerDependencies:
-      - kerberos
-      - supports-color
-
   iconv-lite@0.4.24:
     dependencies:
       safer-buffer: 2.1.2
@@ -3130,8 +3091,6 @@ snapshots:
 
   progress@2.0.3:
     optional: true
-
-  proxy-agent-negotiate@1.1.0: {}
 
   proxy-from-env@2.1.0: {}
 
