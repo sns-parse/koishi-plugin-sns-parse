@@ -39,3 +39,20 @@ describe('generateFormattedText', () => {
     expect(t.startsWith('【2/3】')).toBe(true)
   })
 })
+
+describe('generateFormattedText — 正文变量（纯文字作品）', () => {
+  const tpl = '标题：${标题}\n简介：${简介}\n正文：${正文}'
+  it('type=text：正文=desc，简介行隐藏，换行保留', () => {
+    const p = base({ type: 'text', desc: '第一段\n\n第二段 https://x.com/a'.replace(' https://x.com/a', '') })
+    const t = generateFormattedText(p, tpl)
+    expect(t).toBe('正文：第一段\n\n第二段')
+  })
+  it('type=text 但模板无 ${正文}（旧模板）：简介保持 desc，不隐藏', () => {
+    const t = generateFormattedText(base({ type: 'text', desc: '全文内容' }), '简介：${简介}')
+    expect(t).toBe('简介：全文内容')
+  })
+  it('媒体作品：正文行隐藏，简介正常', () => {
+    const t = generateFormattedText(base({ type: 'video', desc: '视频说明', video: 'https://v/1' }), tpl)
+    expect(t).toBe('简介：视频说明')
+  })
+})
