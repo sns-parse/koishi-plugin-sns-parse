@@ -59,7 +59,8 @@
 
 ## 待办 (TODO)
 
-- **运行时实现切换已完成（2026-09）**：koishi 引擎与扩展实现全部来自外部包——引擎 `@sns-parse/core`（19 处 shim 重导出 + runtime 包装），NSFW/合并/翻译/GIF 经 `createCoreExtensions() + nsfwExtension()` 装配（`src/services/nsfw/*` 仅剩 ext-nsfw 的路径兼容 shim）；配置组全量 DSL 化（引擎组来自 core `engineConfigContributions()`，koishi 层仅剩「基本设置」）。
+- **运行时实现切换已完成（2026-09）**：koishi 引擎与扩展实现全部来自外部包——引擎 `@sns-parse/core`（19 处 shim 重导出 + runtime 包装），NSFW/合并/翻译/GIF 经 `createCoreExtensions() + nsfwExtension()` 装配（`src/services/nsfw/*` 仅剩 ext-nsfw 的路径兼容 shim）；配置组全量 DSL 化（引擎组来自 core `engineConfigContributions()`，koishi 层仅剩「基本设置」+「自动更新」）。
+- **自更新（1.20.0-alpha.7）**：`src/services/self-update.ts`——设置（updateOnStartup）/ 定时（autoUpdateHours）/ 命令（parse/update，authority 3）三路触发；registry 解析（显式 > 项目 .npmrc > 用户 .npmrc > npmmirror）；锁文件探测 PM（pnpm/yarn classic+berry/npm）；守护进程（IPC 存在）下 `loader.fullReload()`（退出码 51 自动重启），否则提示手动重启；主版本跨越不自动更。
 - tag 触发的 CI 发布（含发布后自动 npmmirror 同步）尚未演练过：push 一个 `v*` tag 即可验证。
 - 旧包 `@sns-parse/extensions@0.1.0`（实现版）已 `deprecate`；如需移除请在 npm 网页操作。
 

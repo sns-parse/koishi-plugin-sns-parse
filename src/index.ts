@@ -10,6 +10,7 @@ import { flush } from './sender/flush'
 import { diagnoseTls } from './utils/tls-client'
 import { videoVault, configureVault } from './services/nsfw/vault'
 import { initModerationCache, flushModerationCache } from './services/nsfw/moderation/cache'
+import { performSelfUpdate, applyReload } from './services/self-update'
 import {
   applyOverrideToConfig, createConfigEnvelope, serializeConfigEnvelope,
   parseConfigInput, mergeConfig, diffKeys, writeOverride,
@@ -166,6 +167,42 @@ export function createPlugin(pluginName: string) {
       ctx.logger.warn(`[tlsget-diag] 自检异常：${e?.message || e}`)
     })
   }
+
+  // ===== 自更新（三种触发方式共用一套流程） =====
+  const runSelfUpdate = async (notify?: (t: string) => Promise<void> | void) => {
+    const r = await performSelfUpdate(pluginName, { baseDir, registry: config.updateRegistry, notify })
+    if (r.updated) {
+      logger.info(`自更新：${r.message}`)
+      applyReload(ctx)
+    } else if (!/^已是最新/.test(r.message)) {
+      logger.warn(`自更新：${r.message}`)
+    } else {
+      logger.info(r.message)
+    }
+    return r
+  }
+  // ① 设置：启动/重载时检查并更新（延迟 30s，避开启动高峰）
+  if (config.updateOnStartup) {
+    const t = setTimeout(() => { void runSelfUpdate() }, 30_000)
+    ;(t as any).unref?.()
+  }
+  // ② 定时：按小时间隔周期检查（cordis interval，插件卸载自动清理）
+  if (config.autoUpdateHours && config.autoUpdateHours > 0) {
+    ctx.setInterval(() => { void runSelfUpdate() }, Math.max(1, Number(config.autoUpdateHours)) * 3600_000)
+  }
+  // ③ 命令：parse/update（管理员）
+  ctx.command('parse/update', '检查并更新本插件（管理员）', { authority: 3 })
+    .action(async ({ session }) => {
+      const notify = async (text: string) => {
+        try { await session?.send(text) } catch {}
+      }
+      const r = await runSelfUpdate(notify)
+      if (r.updated && r.daemon) {
+        await notify(r.message)
+        return
+      }
+      return r.message
+    })
 
   ctx.on('dispose', () => {
     rt.urlCacheLocal.clear()

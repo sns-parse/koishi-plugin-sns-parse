@@ -20,6 +20,12 @@ export const Config = Schema.intersect([
     enableDiagCommand: Schema.boolean().default(false).description('启用 parse/diag 环境诊断命令'),
   }).description('基本设置'),
 
+  Schema.object({
+    updateOnStartup: Schema.boolean().default(false).description('启动/重载时自动检查更新（发现新版自动安装；守护进程部署下自动重启生效）'),
+    autoUpdateHours: Schema.number().min(0).step(1).default(0).description('定时检查更新的间隔（小时，0=关闭；结果写入日志，更新成功自动重启生效）'),
+    updateRegistry: Schema.string().default('').description('更新用 npm registry（留空自动：项目 .npmrc → 用户 .npmrc → npmmirror）'),
+  }).description('自动更新'),
+
   ...ENGINE_GROUPS.slice(0, 6).map(contributionToSchema),
 
   // 扩展与平台声明的配置（NSFW/合并/翻译/GIF 与各平台开关等，动态生成）
