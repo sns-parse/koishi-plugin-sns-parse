@@ -4,7 +4,7 @@ import { createWriteStream, existsSync, readFileSync } from 'fs'
 import { mkdir, stat, writeFile } from 'fs/promises'
 import { join, resolve, extname } from 'path'
 import { linkTypeParser } from './utils/url'
-import { BUILTIN_LINK_RULES } from './platforms/definitions'
+import { collectPlatformLinkRules } from '@sns-parse/core'
 import { createRuntime } from './runtime'
 import { getPlatformConfig } from './platforms/custom'
 import { parseUrl } from './engine/fetcher'
@@ -306,7 +306,7 @@ async function main(): Promise<void> {
 
   if (!args.url) { printHelp(); process.exit(1) }
 
-  const matches = linkTypeParser(args.url, BUILTIN_LINK_RULES)
+  const matches = linkTypeParser(args.url, collectPlatformLinkRules())
   if (!matches.length) {
     console.error('✗ 无法识别该链接对应的平台')
     process.exit(1)

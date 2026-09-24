@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { linkTypeParser, cleanUrl, extractAllUrlsFromMessage } from '../src/utils/url'
-import { BUILTIN_LINK_RULES } from '../src/platforms/rules'
+import { collectPlatformLinkRules } from '@sns-parse/core'
 
-const RULES = BUILTIN_LINK_RULES
+const RULES = collectPlatformLinkRules()
 
 describe('cleanUrl', () => {
   it('解码 HTML 实体并去首尾噪声', () => {

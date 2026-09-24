@@ -21,6 +21,7 @@ export const Config = Schema.intersect([
   }).description('基本设置'),
 
   Schema.object({
+    updateFragmentsTrigger: Schema.boolean().default(false).description('一键更新平台/扩展碎片包：开启并保存即执行一次范围内更新，完成后自动复位'),
     updateOnStartup: Schema.boolean().default(false).description('启动/重载时自动检查更新（发现新版自动安装；守护进程部署下自动重启生效）'),
     autoUpdateHours: Schema.number().min(0).step(1).default(0).description('定时检查更新的间隔（小时，0=关闭；结果写入日志，更新成功自动重启生效）'),
     updateRegistry: Schema.string().default('').description('更新用 npm registry（留空自动：项目 .npmrc → 用户 .npmrc → npmmirror）'),

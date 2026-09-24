@@ -1,4 +1,6 @@
 allowBuilds:
+  '@parcel/watcher': false
   esbuild: true
   ffmpeg-static: true
+  vue-demi: false
 minimumReleaseAge: 0

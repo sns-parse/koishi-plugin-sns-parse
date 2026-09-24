@@ -10,7 +10,8 @@ import { flush } from './sender/flush'
 import { diagnoseTls } from './utils/tls-client'
 import { videoVault, configureVault } from './services/nsfw/vault'
 import { initModerationCache, flushModerationCache } from './services/nsfw/moderation/cache'
-import { performSelfUpdate, applyReload } from './services/self-update'
+import { performSelfUpdate, applyReload, updateFragments } from './services/self-update'
+import { collectCapabilities } from '@sns-parse/core'
 import {
   applyOverrideToConfig, createConfigEnvelope, serializeConfigEnvelope,
   parseConfigInput, mergeConfig, diffKeys, writeOverride,
@@ -45,7 +46,7 @@ export function createPlugin(pluginName: string) {
   if (config.nsfwVault) configureVault(config.nsfwVault)
   const modSig = createHash('sha256').update(JSON.stringify(config.nsfwModeration || {})).digest('hex').slice(0, 16)
   initModerationCache((ctx as any).baseDir, modSig)
-  const cap = rt.extensions.capability?.(rt) ?? { ferret: false, moderation: null }
+  const cap = collectCapabilities(rt.extensions, rt)
   ctx.logger.info(`内容安全能力：混淆${cap.ferret ? '可用（ferret-transform 服务已加载）' : '不可用（未检测到 koishi-plugin-ferret-transform-image，相关功能停用）'}；审核${cap.moderation ? `已启用（${cap.moderation}）` : '未配置'}`)
   // 易踩坑提示：配了审核 Provider 但模式全 off，审核不会执行
   if (cap.moderation) {
@@ -171,6 +172,11 @@ export function createPlugin(pluginName: string) {
   // ===== 自更新（三种触发方式共用一套流程） =====
   const runSelfUpdate = async (notify?: (t: string) => Promise<void> | void) => {
     const r = await performSelfUpdate(pluginName, { baseDir, registry: config.updateRegistry, notify })
+    const fr = await updateFragments({ baseDir, registry: config.updateRegistry, notify })
+    if (fr.updated.length || fr.outOfRange.length) {
+      r.message = `${r.message}；${fr.message}`
+      if (fr.updated.length) r.updated = true
+    }
     if (r.updated) {
       logger.info(`自更新：${r.message}`)
       applyReload(ctx)
@@ -190,11 +196,17 @@ export function createPlugin(pluginName: string) {
   if (config.autoUpdateHours && config.autoUpdateHours > 0) {
     ctx.setInterval(() => { void runSelfUpdate() }, Math.max(1, Number(config.autoUpdateHours)) * 3600_000)
   }
-  // ③ 命令：parse/update（管理员）
+  // ③ 命令：parse/update（管理员）；--fragments 仅更新平台/扩展碎片包（范围内）
   ctx.command('parse/update', '检查并更新本插件（管理员）', { authority: 3 })
-    .action(async ({ session }) => {
+    .option('fragments', '-f, --fragments 仅检查并更新平台/扩展碎片包（范围内）')
+    .action(async ({ session, options }) => {
       const notify = async (text: string) => {
         try { await session?.send(text) } catch {}
+      }
+      if (options?.fragments) {
+        const fr = await updateFragments({ baseDir, registry: config.updateRegistry, notify })
+        if (fr.updated.length) applyReload(ctx)
+        return fr.message
       }
       const r = await runSelfUpdate(notify)
       if (r.updated && r.daemon) {
@@ -203,6 +215,21 @@ export function createPlugin(pluginName: string) {
       }
       return r.message
     })
+
+  // ④ 设置触发器：updateFragmentsTrigger 开启并保存 → 执行一次碎片更新并自动复位（写 override）
+  if (config.updateFragmentsTrigger) {
+    const t = setTimeout(async () => {
+      try {
+        const fr = await updateFragments({ baseDir, registry: config.updateRegistry })
+        logger.info(`碎片更新：${fr.message}`)
+        writeOverride(baseDir, pluginName, { ...config, updateFragmentsTrigger: false }, pluginName)
+        if (fr.updated.length) applyReload(ctx)
+      } catch (e: any) {
+        logger.warn(`碎片更新失败：${e?.message || e}`)
+      }
+    }, 2000)
+    ;(t as any).unref?.()
+  }
 
   ctx.on('dispose', () => {
     rt.urlCacheLocal.clear()

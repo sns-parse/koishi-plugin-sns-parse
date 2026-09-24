@@ -1,12 +1,11 @@
 /**
- * 默认扩展装配（纯组合）：动态发现已安装的 @sns-parse/ext-* 碎片包
- * （NSFW/合并/翻译/GIF 实现均在扩展包内；core 只调度，不持有实现）。
- *
- * 宿主可用自己的 VideoParserExtensions 覆盖其中任意一项。
+ * 扩展片段装配：动态发现已安装的 @sns-parse/ext-*（WorkflowExtension[]，含 setup 钩子）。
+ * 未安装的自动缺席（能力/配置贡献同时缺席）；实现全部在扩展包，core 只调度。
  */
-import { loadExtensionImplementations } from '@sns-parse/core'
-import type { VideoParserExtensions } from '../core/extensions'
+import { loadWorkflowExtensions, type WorkflowExtension } from '@sns-parse/core'
 
-export function createDefaultExtensions(): VideoParserExtensions {
-  return { ...loadExtensionImplementations() }
+export function createDefaultExtensions(): WorkflowExtension[] {
+  return loadWorkflowExtensions()
 }
+
+export type { WorkflowExtension }

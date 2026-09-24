@@ -2,12 +2,10 @@
  * 双网关常量与平台专属端点聚合（re-export + 本地定义派生）。
  * 常量与聚合函数来自 @sns-parse/core；映射由本仓库 BUILTIN_PLATFORMS 计算。
  */
-import { dedicatedApisFrom, NEW_GATEWAY_PRIMARY, LEGACY_GATEWAY_PRIMARY, LEGACY_GATEWAY_BACKUP } from '@sns-parse/core'
-import { BUILTIN_PLATFORMS } from './definitions'
-
+import { dedicatedApisFrom, collectPlatformDefinitions, NEW_GATEWAY_PRIMARY, LEGACY_GATEWAY_PRIMARY, LEGACY_GATEWAY_BACKUP } from '@sns-parse/core'
 export { NEW_GATEWAY_PRIMARY, LEGACY_GATEWAY_PRIMARY, LEGACY_GATEWAY_BACKUP }
 
-const maps = dedicatedApisFrom(BUILTIN_PLATFORMS)
+const maps = dedicatedApisFrom(collectPlatformDefinitions())
 
 /** 旧网关平台专属端点（无需 Key） */
 export const defaultDedicatedApisLegacy: Record<string, string> = maps.legacy

@@ -208,3 +208,184 @@ export function applyReload(ctx: Context, delayMs = 1500): void {
   }, delayMs)
   ;(timer as any).unref?.()
 }
+
+
+/* ================= 碎片包（平台/扩展）范围内更新 ================= */
+
+export interface FragmentStatus {
+  name: string
+  current: string
+  latest: string | null
+  /** none=已最新或范围内无新；in-range=范围内可更；out-of-range=范围外（需升本体抬范围） */
+  updateKind: 'none' | 'in-range' | 'out-of-range'
+  /** 范围内可更的目标版本（updateKind==='in-range' 时有值） */
+  target?: string
+}
+
+/** 本插件声明的全部 @sns-parse/* 碎片包（core/平台×27/扩展×4/聚合×2） */
+export const FRAGMENT_PACKAGES: string[] = [
+  '@sns-parse/core',
+  '@sns-parse/platform-acfun', '@sns-parse/platform-bilibili', '@sns-parse/platform-doubao',
+  '@sns-parse/platform-doubao_image', '@sns-parse/platform-douyin', '@sns-parse/platform-haokan',
+  '@sns-parse/platform-huya', '@sns-parse/platform-instagram', '@sns-parse/platform-jimeng',
+  '@sns-parse/platform-kuaishou', '@sns-parse/platform-lishi', '@sns-parse/platform-meipai',
+  '@sns-parse/platform-oasis', '@sns-parse/platform-pipigx', '@sns-parse/platform-pipixia',
+  '@sns-parse/platform-quanmin', '@sns-parse/platform-tiktok', '@sns-parse/platform-toutiao',
+  '@sns-parse/platform-twitter', '@sns-parse/platform-wechat_channel', '@sns-parse/platform-weibo',
+  '@sns-parse/platform-weishi', '@sns-parse/platform-xiaohongshu', '@sns-parse/platform-xigua',
+  '@sns-parse/platform-youtube', '@sns-parse/platform-zhihu', '@sns-parse/platform-zuiyou',
+  '@sns-parse/ext-nsfw', '@sns-parse/ext-merge', '@sns-parse/ext-translate', '@sns-parse/ext-gif',
+  '@sns-parse/platforms', '@sns-parse/extensions',
+]
+
+export interface FragmentInstall {
+  name: string
+  version: string
+}
+
+function parseVer(v: string): { nums: number[]; pre: string } {
+  const s = stripBuildMeta(v)
+  const i = s.indexOf('-')
+  const main = i < 0 ? s : s.slice(0, i)
+  return { nums: main.split('.').map(n => Number(n) || 0), pre: i < 0 ? '' : s.slice(i + 1) }
+}
+
+/** 语义化范围内判定（支持 ^ / ~ / 精确；0.x caret 钉死 minor——0.x minor 锁纪律） */
+export function inRange(version: string, range: string): boolean {
+  const r = stripBuildMeta(String(range || '').trim())
+  const v = stripBuildMeta(version)
+  if (!r) return true
+  const base = r.replace(/^[\^~]/, '')
+  const pv = parseVer(v)
+  const pb = parseVer(base)
+  if (!r.startsWith('^') && !r.startsWith('~')) {
+    return compareVersions(v, base) === 0
+  }
+  if (compareVersions(v, base) < 0) return false
+  if (r.startsWith('~')) {
+    return pv.nums[0] === pb.nums[0] && pv.nums[1] === pb.nums[1]
+  }
+  if (pb.nums[0] === 0) {
+    // 0.x：^ 钉 major.minor
+    if (pv.nums[0] !== 0 || pv.nums[1] !== pb.nums[1]) return false
+  } else if (pv.nums[0] !== pb.nums[0]) {
+    return false
+  }
+  // prerelease 只在 base 同 [major,minor,patch] 且带 prerelease 时放行
+  if (pv.pre && (!pb.pre || pv.nums.join('.') !== pb.nums.join('.'))) return false
+  return true
+}
+
+/** 已装版本（require 探测；未装返回 null） */
+export function installedVersion(name: string): string | null {
+  try {
+    const req = createRequire(typeof __filename !== 'undefined' ? __filename : process.cwd() + '/')
+    const pkg = req(`${name}/package.json`)
+    return String(pkg?.version || '').split('+')[0] || null
+  } catch {
+    return null
+  }
+}
+
+/** 读本插件 package.json 里声明的依赖范围 */
+export function declaredRange(name: string): string {
+  try {
+    const req = createRequire(typeof __filename !== 'undefined' ? __filename : process.cwd() + '/')
+    const self = req('../../package.json')
+    return String(self?.dependencies?.[name] || '')
+  } catch {
+    return ''
+  }
+}
+
+export interface PackumentInfo {
+  latest: string | null
+  versions: string[]
+}
+
+export async function fetchPackument(pkg: string, registry: string): Promise<PackumentInfo> {
+  const res = await axios.get(`${registry.replace(/\/+$/, '')}/${pkg}`, {
+    timeout: 15000,
+    headers: { accept: 'application/vnd.npm.install-v1+json' },
+  })
+  const latest = typeof res.data?.['dist-tags']?.latest === 'string' ? res.data['dist-tags'].latest : null
+  const versions = Object.keys(res.data?.versions || {})
+  return { latest, versions }
+}
+
+/** 逐包状态：范围内可更 / 范围外 / 已最新 */
+export async function listFragments(opts: {
+  registry?: string
+  baseDir?: string
+  names?: string[]
+  fetchPackumentImpl?: typeof fetchPackument
+} = {}): Promise<FragmentStatus[]> {
+  const baseDir = opts.baseDir || process.cwd()
+  const registry = resolveRegistry(opts.registry, baseDir, process.env.USERPROFILE || process.env.HOME || '')
+  const names = (opts.names || FRAGMENT_PACKAGES).filter(n => installedVersion(n))
+  const fetchImpl = opts.fetchPackumentImpl || fetchPackument
+  const out: FragmentStatus[] = []
+  for (const name of names) {
+    const current = installedVersion(name)!
+    const range = declaredRange(name)
+    try {
+      const { latest, versions } = await fetchImpl(name, registry)
+      const candidates = versions
+        .map(stripBuildMeta)
+        .filter(v => inRange(v, range))
+        .filter(v => compareVersions(v, current) > 0)
+        .sort(compareVersions)
+      const target = candidates[candidates.length - 1]
+      const newer = latest ? compareVersions(stripBuildMeta(latest), current) > 0 : false
+      out.push({
+        name, current,
+        latest: latest ? stripBuildMeta(latest) : null,
+        updateKind: target ? 'in-range' : (newer ? 'out-of-range' : 'none'),
+        target,
+      })
+    } catch {
+      out.push({ name, current, latest: null, updateKind: 'none' })
+    }
+  }
+  return out
+}
+
+let fragmentsBusy = false
+
+/**
+ * 碎片包范围内更新（平台/扩展/core）：只升到各包声明范围内最新，
+ * 不破 0.x minor 锁；范围外新版本仅提示升本体。安装后可 applyReload 生效。
+ */
+export async function updateFragments(opts: {
+  registry?: string
+  baseDir?: string
+  timeoutMs?: number
+  names?: string[]
+  notify?: (text: string) => Promise<void> | void
+  fetchPackumentImpl?: typeof fetchPackument
+} = {}): Promise<{ updated: FragmentInstall[]; message: string; outOfRange: string[] }> {
+  if (fragmentsBusy) return { updated: [], message: '碎片包更新已在执行中，请稍候', outOfRange: [] }
+  fragmentsBusy = true
+  try {
+    const statuses = await listFragments(opts)
+    const toInstall = statuses.filter(s => s.updateKind === 'in-range' && s.target)
+    const outOfRange = statuses.filter(s => s.updateKind === 'out-of-range').map(s => s.name)
+    const updated: FragmentInstall[] = []
+    for (const s of toInstall) {
+      await opts.notify?.(`更新 ${s.name}：${s.current} → ${s.target}（范围内）`)
+      const baseDir = opts.baseDir || process.cwd()
+      const registry = resolveRegistry(opts.registry, baseDir, process.env.USERPROFILE || process.env.HOME || '')
+      const inst = await installVersion(s.name, s.target!, baseDir, registry, opts.timeoutMs)
+      if (inst.ok) updated.push({ name: s.name, version: s.target! })
+      else await opts.notify?.(`安装 ${s.name} 失败：${inst.message}`)
+    }
+    const parts: string[] = []
+    parts.push(updated.length
+      ? `已更新 ${updated.length} 个碎片包（${updated.map(u => `${u.name}@${u.version}`).join('、')}）`
+      : '碎片包均已是范围内最新')
+    if (outOfRange.length) parts.push(`以下包有范围外新版本（需升级本体插件）：${outOfRange.join('、')}`)
+    return { updated, message: parts.join('；'), outOfRange }
+  } finally {
+    fragmentsBusy = false
+  }
+}

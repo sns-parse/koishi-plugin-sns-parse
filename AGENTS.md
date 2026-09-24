@@ -8,7 +8,7 @@
 
 ## 分层架构 (Layering)
 
-- **架构铁律：core 只负责任务调度（运行时/契约/配置 DSL/注册发现/分发），一切功能实现必须住在插件包**——`@sns-parse/ext-*`（NSFW/合并/翻译/GIF）与 `@sns-parse/platform-*`（平台原生解析，经 `PlatformDefinition.parse`/`translate` 钩子调度）。core 内不允许出现实现副本（0.5.0 起：merge→ext-merge、gif→ext-gif、translate→ext-translate、X 原生解析→platform-twitter，`createCoreExtensions()` 已移除，宿主统一 `loadExtensionImplementations()` 装配）。
+- **架构铁律（0.6 起）：core 内建完整工作流（9 阶段管道：parse/translate/media.*/merge/transcode/compose/send）+ 基线行为，不内建任何扩展实现、不依赖扩展包**；无扩展时全链路可跑（媒体直通、不合并逐张发、GIF 退化发视频、不翻译）。扩展（`@sns-parse/ext-*`）经 `WorkflowExtension.setup(hooks)` 注入/修改：`before`/`after` 可改输入输出、`replace` 整体替换（后注册者胜）——NSFW→`media.*`、合并→`merge`、GIF→`transcode`、翻译→`translate`。**平台支持范围 = 已加载平台插件声明并集**（`collectPlatformDefinitions()`：聚合包 `definitions[]` 先行 + 粒度包覆盖，未装即不识别）。宿主统一 `loadWorkflowExtensions()` 装配。`flush.ts:45` 式 `Required` 硬解构是反模式（缺扩展即崩），一律走 `runStage`。
 - 目标：拆成「核心 core + 平台依赖 platforms + 扩展 extensions + Koishi 兼容层」四层，可独立成多仓库/多包。
 - **已落地接缝**（本仓库内，行为不变）：
   - `src/core/host.ts`：`VideoParserHost`（logger/baseDir/getService/sender/extensions/context），core 不依赖 Koishi/CLI。
@@ -18,7 +18,7 @@
   - `src/utils/logger.ts`：可注入 `LoggerLike`（默认静默；Koishi/CLI 分别注入）。
   - `src/runtime.ts`：以 `host` 构建，`extensions = 默认实现 + host.extensions`。
 - 包矩阵：`@sns-parse/core`；`@sns-parse/platform-*`×27 + `@sns-parse/platforms` + `@sns-parse/cli`；`@sns-parse/ext-nsfw`/`-ext-merge`/`-ext-translate`/`-ext-gif`；`@sns-parse/koishi-plugin-sns-parse`。
-- `src/platforms/rules.ts` 是平台定义真相源（`scripts/gen-defs.ts` 生成 `src/platforms/definitions/*`）；**带 parse/translate 钩子的定义由生成物 re-export 平台包**（序列化会丢函数）。
+- 平台声明真相源 = 各 `@sns-parse/platform-<type>` 包的 `PlatformDefinition`（rules/dedicated/parse/translate）；`src/platforms/rules.ts`/`definitions/*`/`gen-defs.ts` 已退役（0.6 起动态发现）。
 - `tlsget-rs` **保留 `@char46` 命名与 `char-46/tlsget-rs` 仓库不变**（不重建 6 个平台二进制）。
 
 ## 命名空间与配置迁移 (Namespace & Config Migration)
@@ -48,20 +48,22 @@
 ## sns-parse 分层发布状态 (Published Packages)
 
 - npm scope `@sns-parse` 与 GitHub org `sns-parse`（char-46 为 admin）：
-  - `@sns-parse/core`：**纯调度层**（`0.5.0-alpha.1+upstream.1.6.7`）：契约/配置 DSL/引擎配置声明/运行时 `createRuntime(source, config, {defs, defaultExtensions})`/`loadExtensionImplementations()`（动态发现 ext-*）/`defaultsFromContributions`/`engineConfigContributions()`/fetcher（经 `PlatformDefinition.parse` 钩子调度平台原生解析）；语种工具 `langName`/`shouldSkipTranslate`
-  - `@sns-parse/ext-nsfw`（0.2.0-alpha.3）/`ext-merge`（0.2.0-alpha.1，含合并实现）/`ext-translate`（0.2.0-alpha.1，gtx+MyMemory）/`ext-gif`（0.2.0-alpha.1）+ `@sns-parse/extensions`（0.2.0-alpha.1 纯依赖聚合）
-  - `@sns-parse/platform-twitter`（0.2.0-alpha.2）：X syndication/GraphQL 原生解析 + 推文树/用户维度查询 + Grok 翻译（`parse`/`translate` 钩子）；其余 `platform-<type>` ×27 + `@sns-parse/platforms`（0.2.0-alpha.3 聚合）
-  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.9+upstream.1.6.7`）
-  - `@sns-parse/cli`：CLI 兼容层（`0.1.0-alpha.8+upstream.1.6.7`）
-  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.9`）
-- 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 仅 `dependencies` 自动装全部碎片包，**不 re-export**；碎片包可自选安装。
+  - `@sns-parse/core`：**完整工作流层**（`0.6.0-alpha.1+upstream.1.6.7`）：契约/配置 DSL/引擎配置声明/`createRuntime(source, config, {defs, extensions})`/9 阶段管道（`workflow/hooks.ts` + `workflow/default.ts` 基线）/`flush`/`compose`/`forward`/`loadWorkflowExtensions()`（动态发现 ext-*）/`collectPlatformDefinitions()`（聚合+粒度并集）/`collectCapabilities`/`defaultsFromContributions`/`engineConfigContributions()`；语种工具 `langName`/`shouldSkipTranslate`
+  - `@sns-parse/ext-nsfw`/`ext-merge`/`ext-translate`/`ext-gif`（均 `0.3.0-alpha.1`，钩子注入 `WorkflowExtension`）+ `@sns-parse/extensions`（0.3.0-alpha.1 聚合 + `allExtensions`）
+  - `@sns-parse/platform-twitter`（0.3.0-alpha.1）：X syndication/GraphQL 原生解析 + 推文树/用户维度查询 + Grok 翻译（`parse`/`translate` 钩子）；其余 `platform-<type>` ×27 + `@sns-parse/platforms`（0.3.0-alpha.1 聚合 + `definitions[]` 导出）
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.10+upstream.1.6.7`）
+  - `@sns-parse/cli`：CLI 兼容层（`0.2.0-alpha.1+upstream.1.6.7`）
+  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.10`）
+- 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 通过 `dependencies` 自动装全部碎片包；platforms **导出 `definitions[]`**（聚合优先通道），extensions 导出 `allExtensions()`；碎片包可自选安装（粒度覆盖聚合）。
 - 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
 - Koishi 仓库不 monorepo；通过 npm 依赖 + git submodule（`vendor/{core,extensions,platforms}`）管理。
 - 发布限制：bypass 2FA 的 granular token **不能 `unpublish`**，只能用 `deprecate`/`dist-tag` 纠正；彻底删除需 npm 网页。
 
 ## 待办 (TODO)
 
-- **运行时实现切换已完成（2026-09）**：koishi 引擎与扩展实现全部来自外部包——引擎 `@sns-parse/core`（19 处 shim 重导出 + runtime 包装），NSFW/合并/翻译/GIF 经 `createCoreExtensions() + nsfwExtension()` 装配（`src/services/nsfw/*` 仅剩 ext-nsfw 的路径兼容 shim）；配置组全量 DSL 化（引擎组来自 core `engineConfigContributions()`，koishi 层仅剩「基本设置」+「自动更新」）。
+- **0.6 工作流+钩子迁移已完成（2026-09）**：core 内建完整工作流（flush/compose/forward 已上收 core）+ 基线实现；ext-\* 全部改 `WorkflowExtension.setup(hooks)` 注入；平台声明动态发现（聚合+粒度并集，静态 definitions/rules/gen-defs 退役）；koishi 测试 185/185（含无扩展基线全链路、updateFragments 判定）。
+- **运行时实现切换（2026-09，已被 0.6 取代）**：引擎与扩展实现来自外部包；`src/services/nsfw/*` 仅剩 ext-nsfw 的路径兼容 shim。
+- **碎片包热更（1.20.0-alpha.10）**：`updateFragments()`（self-update.ts）——范围内更新全部 `@sns-parse/*` 碎片包（0.x minor 锁语义 `inRange()`；范围外仅提示升本体）；触发：设置触发器 `updateFragmentsTrigger`（开启并保存即执行一次并自动复位写 override）/`parse/update --fragments`/`updateOnStartup`/`autoUpdateHours` 自动链路一并更碎片；装完 `applyReload`。真按钮卡片（`ctx.console.addEntry`）留待后续（需 `@koishijs/client` 构建链与用户 console 大版本对齐）。
 - **自更新（1.20.0-alpha.7）**：`src/services/self-update.ts`——设置（updateOnStartup）/ 定时（autoUpdateHours）/ 命令（parse/update，authority 3）三路触发；registry 解析（显式 > 项目 .npmrc > 用户 .npmrc > npmmirror）；锁文件探测 PM（pnpm/yarn classic+berry/npm）；守护进程（IPC 存在）下 `loader.fullReload()`（退出码 51 自动重启），否则提示手动重启；主版本跨越不自动更。
 - tag 触发的 CI 发布（含发布后自动 npmmirror 同步）尚未演练过：push 一个 `v*` tag 即可验证。
 - 旧包 `@sns-parse/extensions@0.1.0`（实现版）已 `deprecate`；如需移除请在 npm 网页操作。
