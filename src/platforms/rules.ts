@@ -6,6 +6,7 @@
  * definitions 的生成产物是后续「每平台一个包」的迁移单位。
  */
 import type { PlatformDefinition } from '../core/platform'
+import { twitter as twitterDef } from '@sns-parse/platform-twitter'
 
 export const BUILTIN_PLATFORMS: PlatformDefinition[] = [
   {
@@ -119,11 +120,8 @@ export const BUILTIN_PLATFORMS: PlatformDefinition[] = [
     ],
   },
   {
-    type: 'twitter',
-    rules: [
-      /https?:\/\/twitter\.com\/\w+\/status\/\d{10,}/gi,
-      /https?:\/\/x\.com\/\w+\/status\/\d{10,}/gi,
-    ],
+    // Twitter/X：定义与原生解析/翻译钩子（parse/translate）来自平台包，core 只调度
+    ...twitterDef,
   },
   {
     type: 'instagram',

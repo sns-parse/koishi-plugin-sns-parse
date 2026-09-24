@@ -13,6 +13,18 @@ const outDir = join(process.cwd(), 'src', 'platforms', 'definitions')
 mkdirSync(outDir, { recursive: true })
 
 for (const p of BUILTIN_PLATFORMS) {
+  // 带函数钩子（parse/translate）的定义序列化会丢函数 → 生成物直接 re-export 平台包
+  if (typeof (p as any).parse === 'function' || typeof (p as any).translate === 'function') {
+    writeFileSync(join(outDir, `${p.type}.ts`), [
+      `import type { PlatformDefinition } from '../../core/platform'`,
+      '',
+      `// 带函数钩子（parse/translate）的定义来自平台包（gen-defs 序列化会丢函数），此处 re-export`,
+      `export { ${p.type} } from '@sns-parse/platform-${p.type}'`,
+      `export type { PlatformDefinition }`,
+      '',
+    ].join('\n'), 'utf8')
+    continue
+  }
   const lines: string[] = []
   lines.push(`import type { PlatformDefinition } from '../../core/platform'`)
   lines.push('')

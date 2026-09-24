@@ -1,2 +1,3 @@
-export * from '@sns-parse/core'
-// v1.20.0-alpha.2 起实现下沉至 @sns-parse/core，本文件仅保留路径兼容（re-export）
+export * from '@sns-parse/platform-twitter'
+// X/Twitter 原生解析（syndication/GraphQL/推文树/用户维度）归属 @sns-parse/platform-twitter，
+// 本文件仅保留路径兼容（re-export）。

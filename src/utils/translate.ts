@@ -1,2 +1,4 @@
-export * from '@sns-parse/core'
-// v1.20.0-alpha.2 起实现下沉至 @sns-parse/core，本文件仅保留路径兼容（re-export）
+export { langName, shouldSkipTranslate } from '@sns-parse/core'
+export { translateText } from '@sns-parse/ext-translate'
+export type { TranslateResult } from '@sns-parse/core'
+// 语种决策/展示工具在 core；翻译实现（gtx+MyMemory）在 @sns-parse/ext-translate

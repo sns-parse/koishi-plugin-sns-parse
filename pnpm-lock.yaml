@@ -110,23 +110,26 @@ importers:
   .:
     dependencies:
       '@sns-parse/core':
-        specifier: ^0.4.0-alpha.10
-        version: 0.4.0-alpha.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.5.0-alpha.1
+        version: 0.5.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-gif':
-        specifier: ^0.1.0-alpha.2
-        version: 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.2.0-alpha.1
+        version: 0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-merge':
-        specifier: ^0.1.0-alpha.2
-        version: 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.2.0-alpha.1
+        version: 0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-nsfw':
+        specifier: ^0.2.0-alpha.3
+        version: 0.2.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/ext-translate':
+        specifier: ^0.2.0-alpha.1
+        version: 0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/platform-twitter':
         specifier: ^0.2.0-alpha.2
         version: 0.2.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      '@sns-parse/ext-translate':
-        specifier: ^0.1.0-alpha.2
-        version: 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platforms':
-        specifier: ^0.2.0-alpha.1
-        version: 0.2.0-alpha.1
+        specifier: ^0.2.0-alpha.3
+        version: 0.2.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios:
         specifier: ^1.16.1
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -564,24 +567,24 @@ packages:
     resolution: {integrity: sha512-z/ZPrWq+tKdaGLxOSIsiwT5e9HkaauxvvEeDBwGLPlxnQsB5sq1p/hGfq3bRu/3/IK3t8S9UUf6IfYYqzEdRjg==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/core@0.4.0-alpha.10':
-    resolution: {integrity: sha512-n9scbjr8oP5WQC4uB9R8KOYKSK5UPeNPl5RpZoJ+CRMBL80EEK788cfql6lq3QQT9Lo4m9FLK1+c1/0qIfkQaA==}
+  '@sns-parse/core@0.5.0-alpha.1':
+    resolution: {integrity: sha512-SsupLxJUvnm3WESfgqfyXoRjlSaHc9/WoGS3q+KFGIQV2b3lrSxzR/0zFF2GJOqazsJALwjnCsFUoZw4rzy/sQ==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-gif@0.1.0-alpha.2':
-    resolution: {integrity: sha512-IFArauhy2FpnVXfRkvuAVnFxR8ShivYDW/jO1yfq+6LzY0D8bUwzTvB+jn+jstmvt0YZUmMZTMtws6lze4NIsg==}
+  '@sns-parse/ext-gif@0.2.0-alpha.1':
+    resolution: {integrity: sha512-M4e8gpHT+oFAWMFYI+vfF6QXQm/XIkOTNbh3jVmhKxVcaKeM0FB8azv1e7+ZVW+fvaanx7IlHG1drBs0fow3aw==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-merge@0.1.0-alpha.2':
-    resolution: {integrity: sha512-3KkEe1C9p+njR9SeDVOCGkiNphX2Xb1cdaj/RVWkr3Jjv+htd6f2z6vHUWMl+LVaBLCI9OiklPFgmuDr2k1RfQ==}
+  '@sns-parse/ext-merge@0.2.0-alpha.1':
+    resolution: {integrity: sha512-SzQFRtc+4FftQbRTLVGaxczmUbOuQPMBr5HPJvswOdhoogkoi2Ojh33Wt1tCCo1Opm84Im5NX0n8zf+yz5dXhA==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-nsfw@0.2.0-alpha.2':
-    resolution: {integrity: sha512-bUKQ0crQe2kmUwOri+jVhyjysL0fqU0BMS+FqNjZRDcldKzV1wju9r5gcZ7zcUHthr4S0kIDJmiJeA78KXpLyg==}
+  '@sns-parse/ext-nsfw@0.2.0-alpha.3':
+    resolution: {integrity: sha512-pdCPoFg8w/4yyp2yBGYgsnohOXJYQnZrjQuIzaZnwKggh+nEfPKV6GwnCLB37+7s8ZlsLllXhTQQ0eIJvm3+Jw==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/ext-translate@0.1.0-alpha.2':
-    resolution: {integrity: sha512-h3B4YcRFhwPF8QvqMh3IGdWvhLbTK9csnRl/tn0amQqXUVu4Me+wPHQb0Hba3rSy87FaeSYnNx6D4u24/93uEg==}
+  '@sns-parse/ext-translate@0.2.0-alpha.1':
+    resolution: {integrity: sha512-5Mrma0xxaoZXsXPbhdV217SaGpqUq8WnwIVd+BQjkL1oK+xgh/fmGHuRTxLAIAn92US4x+1DmjdcPwaJO1caOg==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/platform-acfun@0.2.0-alpha.1':
@@ -656,8 +659,8 @@ packages:
     resolution: {integrity: sha512-UX49gCWLhcmBIUI3P7Jjr4+1W2fgbA+B3+PY3PU4b65orYScKfo35lPlzGtuEx+1o0UBBcmhiWNFj2IsOg2nGw==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/platform-twitter@0.2.0-alpha.1':
-    resolution: {integrity: sha512-q+bi8ZM+CEsr9ZEB35TM0/DvZM16v+3cWCabneUz//H6k3uWFV1TLukcC8kZzWDL+Ct7esujQ0dg4DpReiSQ0w==}
+  '@sns-parse/platform-twitter@0.2.0-alpha.2':
+    resolution: {integrity: sha512-gHwbwre4IEnGwPvMp7GgCrZVx/1zZu8jUTN1/XHUSCxrjBOR1IY5gm/g3aLiHK5yq+ubRYTpjNcrf2NEMBvjkA==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/platform-wechat_channel@0.2.0-alpha.1':
@@ -692,8 +695,8 @@ packages:
     resolution: {integrity: sha512-sgDs1nAWbJh5/AqxEq7LoKhY5KceWtZlujN4I2BveZ/h9nSdXgKIHWh6i4v42YUm/Mfkncs7YPavq/pCW7laNQ==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/platforms@0.2.0-alpha.1':
-    resolution: {integrity: sha512-D6WxXg7OPBmw1Rmr4LQlJ2sCwJjB4KiqlGMRxAWTuAoW3HeWHl2J415ZHqx1vy4L/p4oTe1R6+BAZOrNoqzOeg==}
+  '@sns-parse/platforms@0.2.0-alpha.3':
+    resolution: {integrity: sha512-tJbJ3Y6Au1+DRUobKMZ+N6q4U5jO/u8cszFWNpLCELu6Nlv0gjZ4QsaTSxwSUrrEJgzEjS0C/maDd118NcCNKQ==}
     engines: {node: '>=16.0.0'}
 
   '@standard-schema/spec@1.1.0':
@@ -2114,7 +2117,7 @@ snapshots:
 
   '@sns-parse/core@0.3.0-alpha.1': {}
 
-  '@sns-parse/core@0.4.0-alpha.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/core@0.5.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       https-proxy-agent: 5.0.1(supports-color@8.1.1)
@@ -2125,36 +2128,36 @@ snapshots:
       - debug
       - supports-color
 
-  '@sns-parse/ext-gif@0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/ext-gif@0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.4.0-alpha.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.5.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
       ffmpeg-static: 5.3.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
-  '@sns-parse/ext-merge@0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/ext-merge@0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.4.0-alpha.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      '@sns-parse/ext-gif': 0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.5.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/ext-gif': 0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
       ffmpeg-static: 5.3.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
-  '@sns-parse/ext-nsfw@0.2.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/ext-nsfw@0.2.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.4.0-alpha.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.5.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
-  '@sns-parse/ext-translate@0.1.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/ext-translate@0.2.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.4.0-alpha.10(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.5.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
@@ -2232,9 +2235,13 @@ snapshots:
     dependencies:
       '@sns-parse/core': 0.3.0-alpha.1
 
-  '@sns-parse/platform-twitter@0.2.0-alpha.1':
+  '@sns-parse/platform-twitter@0.2.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.3.0-alpha.1
+      '@sns-parse/core': 0.5.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - debug
+      - supports-color
 
   '@sns-parse/platform-wechat_channel@0.2.0-alpha.1':
     dependencies:
@@ -2268,7 +2275,7 @@ snapshots:
     dependencies:
       '@sns-parse/core': 0.3.0-alpha.1
 
-  '@sns-parse/platforms@0.2.0-alpha.1':
+  '@sns-parse/platforms@0.2.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@sns-parse/core': 0.3.0-alpha.1
       '@sns-parse/platform-acfun': 0.2.0-alpha.1
@@ -2289,7 +2296,7 @@ snapshots:
       '@sns-parse/platform-quanmin': 0.2.0-alpha.1
       '@sns-parse/platform-tiktok': 0.2.0-alpha.1
       '@sns-parse/platform-toutiao': 0.2.0-alpha.1
-      '@sns-parse/platform-twitter': 0.2.0-alpha.1
+      '@sns-parse/platform-twitter': 0.2.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-wechat_channel': 0.2.0-alpha.1
       '@sns-parse/platform-weibo': 0.2.0-alpha.1
       '@sns-parse/platform-weishi': 0.2.0-alpha.1
@@ -2298,6 +2305,9 @@ snapshots:
       '@sns-parse/platform-youtube': 0.2.0-alpha.1
       '@sns-parse/platform-zhihu': 0.2.0-alpha.1
       '@sns-parse/platform-zuiyou': 0.2.0-alpha.1
+    transitivePeerDependencies:
+      - debug
+      - supports-color
 
   '@standard-schema/spec@1.1.0': {}
 

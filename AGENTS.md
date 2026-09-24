@@ -8,15 +8,17 @@
 
 ## 分层架构 (Layering)
 
+- **架构铁律：core 只负责任务调度（运行时/契约/配置 DSL/注册发现/分发），一切功能实现必须住在插件包**——`@sns-parse/ext-*`（NSFW/合并/翻译/GIF）与 `@sns-parse/platform-*`（平台原生解析，经 `PlatformDefinition.parse`/`translate` 钩子调度）。core 内不允许出现实现副本（0.5.0 起：merge→ext-merge、gif→ext-gif、translate→ext-translate、X 原生解析→platform-twitter，`createCoreExtensions()` 已移除，宿主统一 `loadExtensionImplementations()` 装配）。
 - 目标：拆成「核心 core + 平台依赖 platforms + 扩展 extensions + Koishi 兼容层」四层，可独立成多仓库/多包。
 - **已落地接缝**（本仓库内，行为不变）：
   - `src/core/host.ts`：`VideoParserHost`（logger/baseDir/getService/sender/extensions/context），core 不依赖 Koishi/CLI。
   - `src/core/sender.ts`：发送层无关 `OutboundElement` IR + `OutboundSender`；Koishi 适配器在 `src/sender/koishi-sender.ts`。
   - `src/core/flush.ts`、`src/core/compose.ts`、`src/core/forward.ts`：编排逻辑（发送层无关）。
-  - `src/core/extensions.ts`：`VideoParserExtensions` 契约；默认实现在 `src/extensions/default.ts`。
+  - `src/core/extensions.ts`：`VideoParserExtensions` 契约；默认实现在 `src/extensions/default.ts`（= `loadExtensionImplementations()` 动态发现已装 ext-*）。
   - `src/utils/logger.ts`：可注入 `LoggerLike`（默认静默；Koishi/CLI 分别注入）。
   - `src/runtime.ts`：以 `host` 构建，`extensions = 默认实现 + host.extensions`。
-- 包矩阵（计划）：`@sns-parse/core`；`@sns-parse/platform-*`×27 + `@sns-parse/platforms` + `@sns-parse/cli`；`@sns-parse/ext-nsfw`/`-ext-merge`/`-ext-translate`/`-ext-gif`；`@sns-parse/koishi-plugin-sns-parse`。
+- 包矩阵：`@sns-parse/core`；`@sns-parse/platform-*`×27 + `@sns-parse/platforms` + `@sns-parse/cli`；`@sns-parse/ext-nsfw`/`-ext-merge`/`-ext-translate`/`-ext-gif`；`@sns-parse/koishi-plugin-sns-parse`。
+- `src/platforms/rules.ts` 是平台定义真相源（`scripts/gen-defs.ts` 生成 `src/platforms/definitions/*`）；**带 parse/translate 钩子的定义由生成物 re-export 平台包**（序列化会丢函数）。
 - `tlsget-rs` **保留 `@char46` 命名与 `char-46/tlsget-rs` 仓库不变**（不重建 6 个平台二进制）。
 
 ## 命名空间与配置迁移 (Namespace & Config Migration)
@@ -46,12 +48,12 @@
 ## sns-parse 分层发布状态 (Published Packages)
 
 - npm scope `@sns-parse` 与 GitHub org `sns-parse`（char-46 为 admin）：
-  - `@sns-parse/core`：契约 + 配置 DSL + **解析引擎** + **引擎配置声明**（`0.4.0-alpha.4+upstream.1.6.7`；fetcher/parser/translate/twitter/merge/gif/tls-client/config-io/registry/动态运行时 `createRuntime(source, config, {defs, defaultExtensions})`/`createCoreExtensions()`/`defaultsFromContributions`/`engineConfigContributions()`；X 长推 syndication 截断时登录态 GraphQL 全文回退）
-  - `@sns-parse/ext-nsfw|ext-merge|ext-translate|ext-gif` + `@sns-parse/extensions`（纯依赖聚合；均对齐 core `^0.4.0-alpha.1` 单实例；ext-nsfw 顶层导出含 moderation/cache）
-  - `@sns-parse/platform-<type>` ×27 + `@sns-parse/platforms`（纯依赖聚合）
-  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层，命名空间 `sns-parse`，动态配置（`1.20.0-alpha.4+upstream.1.6.7` 引擎与扩展实现均来自外部包）
-  - `@sns-parse/cli`：CLI 兼容层（`0.1.0-alpha.2+upstream.1.6.7`，仓库 `sns-parse/cli`；bin `sns-parse` / `video-parser`；默认值 = 引擎+扩展+平台声明，无硬编码基线）
-  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（转发新包，迁移非强制）
+  - `@sns-parse/core`：**纯调度层**（`0.5.0-alpha.1+upstream.1.6.7`）：契约/配置 DSL/引擎配置声明/运行时 `createRuntime(source, config, {defs, defaultExtensions})`/`loadExtensionImplementations()`（动态发现 ext-*）/`defaultsFromContributions`/`engineConfigContributions()`/fetcher（经 `PlatformDefinition.parse` 钩子调度平台原生解析）；语种工具 `langName`/`shouldSkipTranslate`
+  - `@sns-parse/ext-nsfw`（0.2.0-alpha.3）/`ext-merge`（0.2.0-alpha.1，含合并实现）/`ext-translate`（0.2.0-alpha.1，gtx+MyMemory）/`ext-gif`（0.2.0-alpha.1）+ `@sns-parse/extensions`（0.2.0-alpha.1 纯依赖聚合）
+  - `@sns-parse/platform-twitter`（0.2.0-alpha.2）：X syndication/GraphQL 原生解析 + 推文树/用户维度查询 + Grok 翻译（`parse`/`translate` 钩子）；其余 `platform-<type>` ×27 + `@sns-parse/platforms`（0.2.0-alpha.3 聚合）
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.9+upstream.1.6.7`）
+  - `@sns-parse/cli`：CLI 兼容层（`0.1.0-alpha.8+upstream.1.6.7`）
+  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.9`）
 - 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 仅 `dependencies` 自动装全部碎片包，**不 re-export**；碎片包可自选安装。
 - 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
 - Koishi 仓库不 monorepo；通过 npm 依赖 + git submodule（`vendor/{core,extensions,platforms}`）管理。
