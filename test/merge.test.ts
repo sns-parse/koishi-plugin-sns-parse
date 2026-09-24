@@ -158,6 +158,33 @@ describe('verifyLayout / detectMergeLayout（内容识别）', () => {
     const ramp = [0, 1, 2].map((i) => grayBuf(40, (x, y) => 40 + Math.round(x * 0.5 + (i * 40 + y) * 0.3)))
     expect(verifyLayout({ kind: 'v' }, ramp).pass).toBe(false)
   })
+  it('单缝边界容差：≥4 图、仅一条 ∈[3,5) 的轻微错位放行（平台独立重压缩）', () => {
+    // 缓变趋势 + 哈希纹理；piece1 起整体抬 ~12（跨缝趋势差 ≈13，基线触底 3 → 比值 ≈4.3）
+    const tex = (x: number, y: number, s: number) => (x * 7 + y * 11 + s * 13) % 29
+    const mk = (base: number, off: number) => grayBuf(40, (x, y) => base + Math.floor((off + y) / 8) + tex(x, y, 1))
+    const pieces = [mk(100, 0), mk(112, 40), mk(112, 80), mk(112, 120)] // 仅第一条缝错位，其余连续
+    const r = verifyLayout({ kind: 'v' }, pieces)
+    const shifted = r.seams.find((s) => !s.ok)
+    expect(shifted).toBeTruthy()
+    expect(shifted!.score).toBeGreaterThanOrEqual(3)
+    expect(shifted!.score).toBeLessThan(5)
+    expect(r.pass).toBe(true) // 3 条缝相互印证 + 仅一条边界缝 → 放行
+  })
+  it('3 图（仅 2 缝）单缝边界错位证据不足 → 仍拒绝', () => {
+    const tex = (x: number, y: number, s: number) => (x * 7 + y * 11 + s * 13) % 29
+    const mk = (base: number, off: number) => grayBuf(40, (x, y) => base + Math.floor((off + y) / 8) + tex(x, y, 1))
+    const r = verifyLayout({ kind: 'v' }, [mk(100, 0), mk(112, 40), mk(112, 80)])
+    expect(r.seams.some((s) => !s.ok && s.score < 5)).toBe(true) // 存在边界缝
+    expect(r.pass).toBe(false) // 缝数不足 → 不放行
+  })
+  it('两条边界缝 / 严重不连续仍拒绝', () => {
+    const tex = (x: number, y: number, s: number) => (x * 7 + y * 11 + s * 13) % 29
+    const mk = (base: number, off: number) => grayBuf(40, (x, y) => base + Math.floor((off + y) / 8) + tex(x, y, 1))
+    expect(verifyLayout({ kind: 'v' }, [mk(100, 0), mk(112, 40), mk(124, 80), mk(124, 120)]).pass).toBe(false) // 两条边界缝
+    const hard = grayBuf(40, (x, y) => 150 + Math.floor(y / 8) + tex(x, y, 2))
+    const p0 = grayBuf(40, (x, y) => 100 + Math.floor(y / 8) + tex(x, y, 0))
+    expect(verifyLayout({ kind: 'v' }, [p0, hard, p0]).pass).toBe(false) // 严重不连续（≫5）
+  })
   it('detectMergeLayout 在多候选中选出接缝最优布局', () => {
     // 构造只可能纵向连续的 4 图（同宽、高各不同 → 只有 v 候选）
     const sizes = [S(300, 100), S(300, 140), S(300, 120), S(300, 90)]
