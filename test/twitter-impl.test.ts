@@ -213,3 +213,107 @@ describe('twitter 用户时间线纯函数（回归）', () => {
     expect(conn.bottomCursor).toBe('C1')
   })
 })
+
+/* ---------- 外链卡片（t.co 预览）：展开保留 + og 预览图（0.3.0-alpha.2） ---------- */
+
+describe('twitter 外链卡片（A+B）', () => {
+  const mkHttp = (tweet: any, targetHtml: string | null, calls: string[]) => ({
+    get: async (u: string) => {
+      calls.push(u)
+      if (u.includes('syndication')) return { data: tweet }
+      if (targetHtml === null) throw new Error('should not fetch target')
+      return { data: targetHtml }
+    },
+  }) as any
+
+  it('A：外链 t.co 原位展开为真实链接（X 内部互链仍剥离）', async () => {
+    const calls: string[] = []
+    const http = mkHttp({
+      __typename: 'Tweet',
+      user: { screen_name: 'TwinkFeetUK', name: 'TFUK' },
+      text: 'Post of the day: Preparing @BGNFeet for lunch https://t.co/bWFa14ET1y',
+      lang: 'en',
+      entities: { urls: [
+        { url: 'https://t.co/bWFa14ET1y', expanded_url: 'https://www.twinkfeet.uk/210522bgnfeetfootroast/' },
+      ] },
+    }, null, calls)
+    const p = await parseTwitter('https://x.com/TwinkFeetUK/status/2101235351356404176', http)
+    expect(p.desc).toBe('Post of the day: Preparing @BGNFeet for lunch https://www.twinkfeet.uk/210522bgnfeetfootroast/')
+    // 纯文字推 + 外链：og 探测会发起（mock 抛错被静默吞掉，不影响出文字结果）
+    expect(calls).toHaveLength(2)
+    expect(p.type).toBe('text')
+    expect(p.images).toEqual([])
+  })
+
+  it('X 内部互链（pic.twitter.com）剥离且不触发预览探测', async () => {
+    const calls: string[] = []
+    const http = mkHttp({
+      __typename: 'Tweet',
+      user: { screen_name: 'a' },
+      text: '看图 https://t.co/AbCdEf1234',
+      lang: 'zh',
+      entities: { urls: [{ url: 'https://t.co/AbCdEf1234', expanded_url: 'https://pic.twitter.com/a/1/photo/1' }] },
+    }, null, calls)
+    const p = await parseTwitter('https://x.com/a/status/2101235351356404000', http)
+    expect(p.desc).toBe('看图')
+    expect(p.images).toEqual([])
+    expect(calls).toHaveLength(1)
+  })
+
+  it('B：纯文字推 + 外链卡片 → og:image 注入为预览图（实体解码）', async () => {
+    const calls: string[] = []
+    const http = mkHttp({
+      __typename: 'Tweet',
+      user: { screen_name: 'TwinkFeetUK', name: 'TFUK' },
+      text: 'Post of the day https://t.co/bWFa14ET1y',
+      lang: 'en',
+      entities: { urls: [
+        { url: 'https://t.co/bWFa14ET1y', expanded_url: 'https://www.twinkfeet.uk/210522bgnfeetfootroast/' },
+      ] },
+    }, '<html><head><meta property="og:image" content="https://www.twinkfeet.uk/wp-content/uploads/2021/05/210522BGNFeetfootroast.jpg?x=1&amp;y=2" /><meta property="og:title" content="Preparing" /></head></html>', calls)
+    const p = await parseTwitter('https://x.com/TwinkFeetUK/status/2101235351356404176', http)
+    expect(p.images).toEqual(['https://www.twinkfeet.uk/wp-content/uploads/2021/05/210522BGNFeetfootroast.jpg?x=1&y=2'])
+    expect(p.type).toBe('image')
+    expect(p.cover).toContain('twinkfeet.uk')
+    expect(calls.filter(u => !u.includes('syndication'))).toHaveLength(1)
+  })
+
+  it('有原生媒体时不做外链预览探测（避免重复）', async () => {
+    const calls: string[] = []
+    const http = mkHttp({
+      __typename: 'Tweet',
+      user: { screen_name: 'a' },
+      text: 'native + card https://t.co/xXxXxX1234',
+      lang: 'zh',
+      entities: { urls: [{ url: 'https://t.co/xXxXxX1234', expanded_url: 'https://example.com/page' }] },
+      mediaDetails: [{ type: 'photo', media_url_https: 'https://pbs.twimg.com/media/1.jpg' }],
+    }, null, calls)
+    const p = await parseTwitter('https://x.com/a/status/2101235351356404111', http)
+    expect(p.images).toEqual(['https://pbs.twimg.com/media/1.jpg'])
+    expect(p.type).toBe('image')
+    expect(calls).toHaveLength(1)
+  })
+
+  it('og 探测失败静默（目标不可达仍出文字结果）', async () => {
+    const calls: string[] = []
+    const http = {
+      get: async (u: string) => {
+        calls.push(u)
+        if (u.includes('syndication')) {
+          return { data: {
+            __typename: 'Tweet',
+            user: { screen_name: 'a' },
+            text: 'link https://t.co/deadbeef99',
+            lang: 'zh',
+            entities: { urls: [{ url: 'https://t.co/deadbeef99', expanded_url: 'https://unreachable.example/x' }] },
+          } }
+        }
+        throw new Error('ECONNREFUSED')
+      },
+    } as any
+    const p = await parseTwitter('https://x.com/a/status/2101235351356404222', http)
+    expect(p.desc).toBe('link https://unreachable.example/x')
+    expect(p.type).toBe('text')
+    expect(p.images).toEqual([])
+  })
+})

@@ -48,12 +48,14 @@
 ## sns-parse 分层发布状态 (Published Packages)
 
 - npm scope `@sns-parse` 与 GitHub org `sns-parse`（char-46 为 admin）：
-  - `@sns-parse/core`：**完整工作流层**（`0.6.0-alpha.1+upstream.1.6.7`）：契约/配置 DSL/引擎配置声明/`createRuntime(source, config, {defs, extensions})`/9 阶段管道（`workflow/hooks.ts` + `workflow/default.ts` 基线）/`flush`/`compose`/`forward`/`loadWorkflowExtensions()`（动态发现 ext-*）/`collectPlatformDefinitions()`（聚合+粒度并集）/`collectCapabilities`/`defaultsFromContributions`/`engineConfigContributions()`；语种工具 `langName`/`shouldSkipTranslate`
+  - `@sns-parse/core`：**完整工作流层**（`0.6.0-alpha.2+upstream.1.6.7`）：契约/配置 DSL/引擎配置声明/`createRuntime(source, config, {defs, extensions})`/9+1 阶段管道（`workflow/hooks.ts` + `workflow/default.ts` 基线；`parse.generic` 为**通用链接解析预留**——契约 `engine/generic.ts`（OG/HTML/LLM `LlmOptions`）+ 配置组「通用链接解析（预留）」，基线=null 未实现）/`flush`/`compose`/`forward`/`loadWorkflowExtensions()`（动态发现 ext-*）/`collectPlatformDefinitions()`（聚合+粒度并集）/`collectCapabilities`/`defaultsFromContributions`/`engineConfigContributions()`；语种工具 `langName`/`shouldSkipTranslate`
   - `@sns-parse/ext-nsfw`/`ext-merge`/`ext-translate`/`ext-gif`（均 `0.3.0-alpha.1`，钩子注入 `WorkflowExtension`）+ `@sns-parse/extensions`（0.3.0-alpha.1 聚合 + `allExtensions`）
-  - `@sns-parse/platform-twitter`（0.3.0-alpha.1）：X syndication/GraphQL 原生解析 + 推文树/用户维度查询 + Grok 翻译（`parse`/`translate` 钩子）；其余 `platform-<type>` ×27 + `@sns-parse/platforms`（0.3.0-alpha.1 聚合 + `definitions[]` 导出）
-  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.10+upstream.1.6.7`）
-  - `@sns-parse/cli`：CLI 兼容层（`0.2.0-alpha.1+upstream.1.6.7`）
-  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.10`）
+  - `@sns-parse/platform-twitter`（0.3.0-alpha.2）：X syndication/GraphQL 原生解析 + 推文树/用户维度查询 + Grok 翻译（`parse`/`translate` 钩子）+ **外链卡片（t.co 预览）**：`buildLinkUrlMap`（外链原位展开/X 内部互链剥离）+ `fetchLinkCardPreview`（og:image/twitter:image 注入预览图，仅无原生媒体时，≤2 目标/10s/512KB 有界）
+  - `@sns-parse/platform-xiaohongshu`（0.3.0-alpha.3）：**原生解析**——短链自展开（死链/登录墙从 redirectPath 恢复重试）→ 游客页 `__INITIAL_STATE__`（图文/视频流/互动数）→ og 兜底 → 旧网关（bugpk）兜底；rules 已带 query 捕获（**explore/discovery/board 链接的 xsec_token 不再被剥离**——旧正则会丢 query 导致网关必报 Missing xsec_token）
+  - 其余 `platform-<type>` ×26 + `@sns-parse/platforms`（0.3.0-alpha.2 聚合 + `definitions[]` 导出）
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.11+upstream.1.6.7`；直依赖 platform-twitter + platform-xiaohongshu）
+  - `@sns-parse/cli`：CLI 兼容层（`0.2.0-alpha.2+upstream.1.6.7`）
+  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.11`）
 - 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 通过 `dependencies` 自动装全部碎片包；platforms **导出 `definitions[]`**（聚合优先通道），extensions 导出 `allExtensions()`；碎片包可自选安装（粒度覆盖聚合）。
 - 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
 - Koishi 仓库不 monorepo；通过 npm 依赖 + git submodule（`vendor/{core,extensions,platforms}`）管理。
@@ -63,7 +65,7 @@
 
 - **0.6 工作流+钩子迁移已完成（2026-09）**：core 内建完整工作流（flush/compose/forward 已上收 core）+ 基线实现；ext-\* 全部改 `WorkflowExtension.setup(hooks)` 注入；平台声明动态发现（聚合+粒度并集，静态 definitions/rules/gen-defs 退役）；koishi 测试 185/185（含无扩展基线全链路、updateFragments 判定）。
 - **运行时实现切换（2026-09，已被 0.6 取代）**：引擎与扩展实现来自外部包；`src/services/nsfw/*` 仅剩 ext-nsfw 的路径兼容 shim。
-- **碎片包热更（1.20.0-alpha.10）**：`updateFragments()`（self-update.ts）——范围内更新全部 `@sns-parse/*` 碎片包（0.x minor 锁语义 `inRange()`；范围外仅提示升本体）；触发：设置触发器 `updateFragmentsTrigger`（开启并保存即执行一次并自动复位写 override）/`parse/update --fragments`/`updateOnStartup`/`autoUpdateHours` 自动链路一并更碎片；装完 `applyReload`。真按钮卡片（`ctx.console.addEntry`）留待后续（需 `@koishijs/client` 构建链与用户 console 大版本对齐）。
+- **碎片包热更（1.20.0-alpha.10）**：`updateFragments()`（self-update.ts）——范围内更新全部 `@sns-parse/*` 碎片包（0.x minor 锁语义 `inRange()`；范围外仅提示升本体；**未声明范围的包按当前版本 caret 保守锁**）；触发：设置触发器 `updateFragmentsTrigger`（开启并保存即执行一次并自动复位写 override）/`parse/update --fragments`/`updateOnStartup`/`autoUpdateHours` 自动链路一并更碎片；装完 `applyReload`。真按钮卡片（`ctx.console.addEntry`）留待后续（需 `@koishijs/client` 构建链与用户 console 大版本对齐）。
 - **自更新（1.20.0-alpha.7）**：`src/services/self-update.ts`——设置（updateOnStartup）/ 定时（autoUpdateHours）/ 命令（parse/update，authority 3）三路触发；registry 解析（显式 > 项目 .npmrc > 用户 .npmrc > npmmirror）；锁文件探测 PM（pnpm/yarn classic+berry/npm）；守护进程（IPC 存在）下 `loader.fullReload()`（退出码 51 自动重启），否则提示手动重启；主版本跨越不自动更。
 - tag 触发的 CI 发布（含发布后自动 npmmirror 同步）尚未演练过：push 一个 `v*` tag 即可验证。
 - 旧包 `@sns-parse/extensions@0.1.0`（实现版）已 `deprecate`；如需移除请在 npm 网页操作。

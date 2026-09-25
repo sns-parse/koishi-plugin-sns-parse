@@ -84,14 +84,14 @@ describe('updateFragments 范围内更新判定', () => {
   })
   it('listFragments 分类：in-range / out-of-range / none', async () => {
     const fetchPackumentImpl = async (pkg: string) => {
-      if (pkg === '@sns-parse/core') return { latest: '0.6.0-alpha.2', versions: ['0.5.0-alpha.1', '0.6.0-alpha.1', '0.6.0-alpha.2'] }
+      if (pkg === '@sns-parse/core') return { latest: '0.6.0-alpha.99', versions: ['0.5.0-alpha.1', '0.6.0-alpha.1', '0.6.0-alpha.99'] }
       return { latest: '9.9.9', versions: ['0.3.0-alpha.1', '9.9.9'] }
     }
     const rows = await listFragments({ registry: 'https://example.invalid', names: ['@sns-parse/core', '@sns-parse/ext-gif'], fetchPackumentImpl })
     const core = rows.find(r => r.name === '@sns-parse/core')!
     const gif = rows.find(r => r.name === '@sns-parse/ext-gif')!
     expect(core.updateKind).toBe('in-range')
-    expect(core.target).toBe('0.6.0-alpha.2')
+    expect(core.target).toBe('0.6.0-alpha.99')
     expect(gif.updateKind).toBe('out-of-range')
   })
   it('FRAGMENT_PACKAGES 覆盖 core/平台/扩展/聚合', () => {

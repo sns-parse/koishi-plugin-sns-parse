@@ -332,7 +332,7 @@ export async function listFragments(opts: {
       const { latest, versions } = await fetchImpl(name, registry)
       const candidates = versions
         .map(stripBuildMeta)
-        .filter(v => inRange(v, range))
+        .filter(v => inRange(v, range || `^${current}`))
         .filter(v => compareVersions(v, current) > 0)
         .sort(compareVersions)
       const target = candidates[candidates.length - 1]
