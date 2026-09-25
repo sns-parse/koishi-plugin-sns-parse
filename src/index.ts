@@ -10,7 +10,7 @@ import { flush } from './sender/flush'
 import { diagnoseTls } from './utils/tls-client'
 import { videoVault, configureVault } from './services/nsfw/vault'
 import { initModerationCache, flushModerationCache } from './services/nsfw/moderation/cache'
-import { performSelfUpdate, applyReload, updateFragments } from './services/self-update'
+import { performSelfUpdate, applyReload, updateFragments, describeFragments } from './services/self-update'
 import { collectCapabilities } from '@sns-parse/core'
 import {
   applyOverrideToConfig, createConfigEnvelope, serializeConfigEnvelope,
@@ -39,6 +39,7 @@ export function createPlugin(pluginName: string) {
   const config = applyOverrideToConfig(rawConfig, baseDir, pluginName)
   setVerboseLogging(config.debug || false)
   logger.info('插件启动')
+  logger.info(`已加载碎片包：${describeFragments()}`)
 
   let rt = createRuntime(ctx, config)
 

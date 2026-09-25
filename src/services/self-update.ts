@@ -350,6 +350,17 @@ export async function listFragments(opts: {
   return out
 }
 
+/** 已装碎片包版本清单（插件加载日志用，如 core@0.6.0-alpha.2、platform-xiaohongshu@0.3.0-alpha.3） */
+export function describeFragments(): string {
+  return FRAGMENT_PACKAGES
+    .map(n => {
+      const v = installedVersion(n)
+      return v ? `${n.replace('@sns-parse/', '')}@${v}` : null
+    })
+    .filter(Boolean)
+    .join('、')
+}
+
 let fragmentsBusy = false
 
 /**
@@ -384,6 +395,9 @@ export async function updateFragments(opts: {
       ? `已更新 ${updated.length} 个碎片包（${updated.map(u => `${u.name}@${u.version}`).join('、')}）`
       : '碎片包均已是范围内最新')
     if (outOfRange.length) parts.push(`以下包有范围外新版本（需升级本体插件）：${outOfRange.join('、')}`)
+    if (updated.length) {
+      parts.push(typeof (process as any).send === 'function' ? '守护进程将自动重载生效' : '需重启 Koishi 后生效')
+    }
     return { updated, message: parts.join('；'), outOfRange }
   } finally {
     fragmentsBusy = false

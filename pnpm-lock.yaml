@@ -110,8 +110,8 @@ importers:
   .:
     dependencies:
       '@sns-parse/core':
-        specifier: ^0.6.0-alpha.2
-        version: 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.6.0-alpha.3
+        version: 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-gif':
         specifier: ^0.3.0-alpha.1
         version: 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -128,8 +128,8 @@ importers:
         specifier: ^0.3.0-alpha.2
         version: 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-xiaohongshu':
-        specifier: ^0.3.0-alpha.3
-        version: 0.3.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.3.0-alpha.4
+        version: 0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platforms':
         specifier: ^0.3.0-alpha.2
         version: 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -1198,8 +1198,8 @@ packages:
   '@satorijs/protocol@1.7.0':
     resolution: {integrity: sha512-ODSBVzdn7s9tw3XGFGYZ1MnjbA1jctwSleJTsyk/lAjyNziOFKNP5nIBAcw0r547dvXBweZNudnCqod6Ts+hqw==}
 
-  '@sns-parse/core@0.6.0-alpha.2':
-    resolution: {integrity: sha512-k2ge84ABtLDY977hgKFhwysXKZyiLKkUkl9NtuXYN1YHydSv1XzRxrhZ2n29L55tBBzO62eAVmaMGPLE43gA9A==}
+  '@sns-parse/core@0.6.0-alpha.3':
+    resolution: {integrity: sha512-xiB+NogYVcuuzl9Lk0GYLluzRsSw6jT0Jp4lMIGMQ9IMvUQrlnNTsymWccQxhPb/bC1BY1NQlyWYeoP4J+zd9Q==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/ext-gif@0.3.0-alpha.1':
@@ -1306,8 +1306,8 @@ packages:
     resolution: {integrity: sha512-KuiUhvHGqS2tTRlv7oP/U+Qx1JZM7LJF0Dy0YSzpNJEj8Qw7v2mlZPHknWyaIP9exNoa+Xp6SAYdmi+nBUC6xw==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/platform-xiaohongshu@0.3.0-alpha.3':
-    resolution: {integrity: sha512-Hv0HETf6L/ixvPq6blBEFd9d7kMzojk2fQh7W9SMT8RfYCtq+IkE3AwWgdt2c+pxMv+kgBknYgIpMGXA6ARGoQ==}
+  '@sns-parse/platform-xiaohongshu@0.3.0-alpha.4':
+    resolution: {integrity: sha512-M0Zle6SAevjeBsLS9Du4vgkKc/K4B/epB3y9ByEQ3qRzMeWxEPr3+dbVTmE6yDPJV+4yQcRyAjuPiyVIld0cLA==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/platform-xigua@0.3.0-alpha.1':
@@ -3689,7 +3689,7 @@ snapshots:
       '@satorijs/element': 3.2.0
       cosmokit: 1.8.1
 
-  '@sns-parse/core@0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/core@0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       https-proxy-agent: 5.0.1(supports-color@8.1.1)
@@ -3702,7 +3702,7 @@ snapshots:
 
   '@sns-parse/ext-gif@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
       ffmpeg-static: 5.3.0(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -3711,7 +3711,7 @@ snapshots:
 
   '@sns-parse/ext-merge@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/ext-gif': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
       ffmpeg-static: 5.3.0(supports-color@8.1.1)
@@ -3721,7 +3721,7 @@ snapshots:
 
   '@sns-parse/ext-nsfw@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
@@ -3729,7 +3729,7 @@ snapshots:
 
   '@sns-parse/ext-translate@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
@@ -3737,133 +3737,133 @@ snapshots:
 
   '@sns-parse/platform-acfun@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-bilibili@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-doubao@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-doubao_image@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-douyin@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-haokan@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-huya@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-instagram@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-jimeng@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-kuaishou@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-lishi@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-meipai@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-oasis@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-pipigx@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-pipixia@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-quanmin@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-tiktok@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-toutiao@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-twitter@0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
@@ -3871,28 +3871,28 @@ snapshots:
 
   '@sns-parse/platform-wechat_channel@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-weibo@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-weishi@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
-  '@sns-parse/platform-xiaohongshu@0.3.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/platform-xiaohongshu@0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
@@ -3900,35 +3900,35 @@ snapshots:
 
   '@sns-parse/platform-xigua@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-youtube@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-zhihu@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platform-zuiyou@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
 
   '@sns-parse/platforms@0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@sns-parse/core': 0.6.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-acfun': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-bilibili': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-doubao': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -3951,7 +3951,7 @@ snapshots:
       '@sns-parse/platform-wechat_channel': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-weibo': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-weishi': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      '@sns-parse/platform-xiaohongshu': 0.3.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/platform-xiaohongshu': 0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-xigua': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-youtube': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-zhihu': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)

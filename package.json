@@ -1,7 +1,7 @@
 {
   "name": "@sns-parse/koishi-plugin-sns-parse",
   "description": "Koishi 全平台视频/图集解析插件（sns-parse 分层架构的 Koishi 兼容层），支持抖音/快手/B站/微博/小红书/YouTube/TikTok/X 等 27+ 平台",
-  "version": "1.20.0-alpha.11+upstream.1.6.7",
+  "version": "1.20.0-alpha.12+upstream.1.6.7",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "bin": {
@@ -109,13 +109,13 @@
     "ffmpeg-static": "^5.2.0"
   },
   "dependencies": {
-    "@sns-parse/core": "^0.6.0-alpha.2",
+    "@sns-parse/core": "^0.6.0-alpha.3",
     "@sns-parse/ext-gif": "^0.3.0-alpha.1",
     "@sns-parse/ext-merge": "^0.3.0-alpha.1",
     "@sns-parse/ext-nsfw": "^0.3.0-alpha.1",
     "@sns-parse/ext-translate": "^0.3.0-alpha.1",
     "@sns-parse/platform-twitter": "^0.3.0-alpha.2",
-    "@sns-parse/platform-xiaohongshu": "^0.3.0-alpha.3",
+    "@sns-parse/platform-xiaohongshu": "^0.3.0-alpha.4",
     "@sns-parse/platforms": "^0.3.0-alpha.2",
     "axios": "^1.16.1",
     "https-proxy-agent": "^5.0.1"

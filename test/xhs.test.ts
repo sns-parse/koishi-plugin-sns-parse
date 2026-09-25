@@ -31,7 +31,7 @@ describe('xiaohongshu 原生解析', () => {
         { urlDefault: '//sns-webpic-qc.xhscdn.com/2.jpg' },
       ],
       user: { nickname: '小红薯', userId: 'u1', avatar: '//cdn.avatar/x.png' },
-      interactInfo: { liked: '1.2万', commentCount: 3, collected: '888', shared: '12' },
+      interactInfo: { likedCount: '12000', liked: false, collectedCount: '888', collected: false, commentCount: 3, shareCount: '12' },
       time: 1784105542000, ipLocation: '上海',
     }
     const http = mkHttp(u => {
@@ -147,6 +147,13 @@ describe('xiaohongshu 链接识别（query 保留）', () => {
     expect(m[0].type).toBe('xiaohongshu')
     expect(m[0].url).toContain('xsec_token=')
     expect(m[0].url).toContain('xsec_source=pc_share')
+  })
+  it('xhslink.cn 新短链域名可识别（App 分享新形态）', () => {
+    const all = collectPlatformDefinitions().flatMap(d => d.rules.map(pattern => ({ pattern, type: d.type })))
+    const m = linkTypeParser('那是林间的精灵 https://xhslink.cn/o/47SAd6Ysq7Z 复制这段，去【小红书】发现更多好内容~', all)
+    expect(m.length).toBe(1)
+    expect(m[0].type).toBe('xiaohongshu')
+    expect(m[0].url).toBe('https://xhslink.cn/o/47SAd6Ysq7Z')
   })
   it('def 带 parse 钩子（fetcher 原生路径可用）', () => {
     expect(typeof xhsDef.parse).toBe('function')

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createRuntime as coreCreateRuntime, flush, type OutboundSender, type OutboundElement } from '@sns-parse/core'
-import { inRange, listFragments, FRAGMENT_PACKAGES } from '../src/services/self-update'
+import { inRange, listFragments, describeFragments, FRAGMENT_PACKAGES } from '../src/services/self-update'
 import { makeConfig, mockSession } from './helpers'
 
 describe('无扩展基线全链路（WorkflowExtension=[] 也能跑通）', () => {
@@ -100,5 +100,12 @@ describe('updateFragments 范围内更新判定', () => {
     expect(FRAGMENT_PACKAGES).toContain('@sns-parse/ext-nsfw')
     expect(FRAGMENT_PACKAGES).toContain('@sns-parse/platforms')
     expect(FRAGMENT_PACKAGES.length).toBe(34)
+  })
+  it('describeFragments 列出已装碎片版本（启动日志）', () => {
+    const s = describeFragments()
+    expect(s).toContain('core@0.6.0')
+    expect(s).toContain('platform-xiaohongshu@0.3.0')
+    expect(s).toContain('platform-twitter@0.3.0')
+    expect(s).toContain('ext-nsfw@0.3.0')
   })
 })
