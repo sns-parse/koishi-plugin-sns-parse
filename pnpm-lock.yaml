@@ -127,12 +127,15 @@ importers:
       '@sns-parse/platform-twitter':
         specifier: ^0.3.0-alpha.2
         version: 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/platform-weibo':
+        specifier: ^0.3.0-alpha.2
+        version: 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-xiaohongshu':
         specifier: ^0.3.0-alpha.4
         version: 0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platforms':
-        specifier: ^0.3.0-alpha.2
-        version: 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.3.0-alpha.3
+        version: 0.3.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios:
         specifier: ^1.16.1
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -1298,8 +1301,8 @@ packages:
     resolution: {integrity: sha512-lhzS8a5BjVzxLK/0Zf5GlU+4dCj1wr00g2JQyXZzzD9YeFQmHKlH6bLFK1Zg80zZ1J+qq26XiZe54AruCb+2gw==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/platform-weibo@0.3.0-alpha.1':
-    resolution: {integrity: sha512-3XAq8njJ2JoVMuDz35+vdsy34Tv4HAS0/erX/M3X47FnyGqXUmDxowIqBVdAYhap0ZCnSdKViVkYYxR/wqs9Qw==}
+  '@sns-parse/platform-weibo@0.3.0-alpha.2':
+    resolution: {integrity: sha512-7BpINel3/NxjIc3WhFtMqttNxVpBBxd5l3tzfB38+O5og7ddB/8x/OvSh2p4t+YOP0AUIoXjxkUdEM4l0esRzQ==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/platform-weishi@0.3.0-alpha.1':
@@ -1326,8 +1329,8 @@ packages:
     resolution: {integrity: sha512-nirBkC89+Tedm1xK01ROpuK6oKgWHzVZRSPORX1VGpjm/uNZk3cHUbGbGmoB00GzTApmaJK7yEz/R9/gzLRlNg==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/platforms@0.3.0-alpha.2':
-    resolution: {integrity: sha512-oLcCPIOmkM8dr5BVGwTiYnNi7W0gwXA517++1K6BZZ+KRvWBFJkHXkit/nIALrkA6JeDKZiWmxIfyqQqFbWGHA==}
+  '@sns-parse/platforms@0.3.0-alpha.3':
+    resolution: {integrity: sha512-JoKZy2+gu1KQ5Z1kqnOI0WPGfR+Cl6KCXmAIuj5dTyMwTpJtxr31Ht/5uEi585+7yVZl8XGmMABNbOEivF6kLA==}
     engines: {node: '>=16.0.0'}
 
   '@standard-schema/spec@1.1.0':
@@ -3876,9 +3879,10 @@ snapshots:
       - debug
       - supports-color
 
-  '@sns-parse/platform-weibo@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/platform-weibo@0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -3926,7 +3930,7 @@ snapshots:
       - debug
       - supports-color
 
-  '@sns-parse/platforms@0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/platforms@0.3.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-acfun': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -3949,7 +3953,7 @@ snapshots:
       '@sns-parse/platform-toutiao': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-twitter': 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-wechat_channel': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      '@sns-parse/platform-weibo': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/platform-weibo': 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-weishi': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-xiaohongshu': 0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-xigua': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)

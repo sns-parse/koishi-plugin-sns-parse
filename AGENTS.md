@@ -51,11 +51,12 @@
   - `@sns-parse/core`：**完整工作流层**（`0.6.0-alpha.2+upstream.1.6.7`）：契约/配置 DSL/引擎配置声明/`createRuntime(source, config, {defs, extensions})`/9+1 阶段管道（`workflow/hooks.ts` + `workflow/default.ts` 基线；`parse.generic` 为**通用链接解析预留**——契约 `engine/generic.ts`（OG/HTML/LLM `LlmOptions`）+ 配置组「通用链接解析（预留）」，基线=null 未实现）/`flush`/`compose`/`forward`/`loadWorkflowExtensions()`（动态发现 ext-*）/`collectPlatformDefinitions()`（聚合+粒度并集）/`collectCapabilities`/`defaultsFromContributions`/`engineConfigContributions()`；语种工具 `langName`/`shouldSkipTranslate`
   - `@sns-parse/ext-nsfw`/`ext-merge`/`ext-translate`/`ext-gif`（均 `0.3.0-alpha.1`，钩子注入 `WorkflowExtension`）+ `@sns-parse/extensions`（0.3.0-alpha.1 聚合 + `allExtensions`）
   - `@sns-parse/platform-twitter`（0.3.0-alpha.2）：X syndication/GraphQL 原生解析 + 推文树/用户维度查询 + Grok 翻译（`parse`/`translate` 钩子）+ **外链卡片（t.co 预览）**：`buildLinkUrlMap`（外链原位展开/X 内部互链剥离）+ `fetchLinkCardPreview`（og:image/twitter:image 注入预览图，仅无原生媒体时，≤2 目标/10s/512KB 有界）
-  - `@sns-parse/platform-xiaohongshu`（0.3.0-alpha.3）：**原生解析**——短链自展开（死链/登录墙从 redirectPath 恢复重试）→ 游客页 `__INITIAL_STATE__`（图文/视频流/互动数）→ og 兜底 → 旧网关（bugpk）兜底；rules 已带 query 捕获（**explore/discovery/board 链接的 xsec_token 不再被剥离**——旧正则会丢 query 导致网关必报 Missing xsec_token）
-  - 其余 `platform-<type>` ×26 + `@sns-parse/platforms`（0.3.0-alpha.2 聚合 + `definitions[]` 导出）
-  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.11+upstream.1.6.7`；直依赖 platform-twitter + platform-xiaohongshu）
+  - `@sns-parse/platform-xiaohongshu`（0.3.0-alpha.5）：**原生解析**——短链自展开（死链/登录墙从 redirectPath 恢复重试）→ 游客页 `__INITIAL_STATE__`（图文/视频流/互动数）→ og 兜底 → 旧网关（bugpk）兜底；rules 已带 query 捕获（**explore/discovery/board 链接的 xsec_token 不再被剥离**——旧正则会丢 query 导致网关必报 Missing xsec_token）；`xhslink.cn` 新短链域 + `m.xiaohongshu.com` 子域；互动数字段对齐（`likedCount/collectedCount/shareCount`，布尔互动态键跳过）
+  - `@sns-parse/platform-weibo`（0.3.0-alpha.2）：**原生解析（passport 访客流）**——`visitor.passport.weibo.cn` genvisitor→incarnate 取 SUB cookie（模块级缓存 ~20min + 并发单飞）→ `m.weibo.cn/statuses/show`（432/未 ok 强刷访客重试一次）；URL 归一 5 形态（`weibo.com/{uid}/{bid}`、`m.weibo.cn/{status|detail|profile}/{id}`、`video.weibo.com/show?fid=1034:{mid}`、`t.cn` 短链——302 跟随后须命中微博形态否则报"指向非微博内容"）；长文走 `/statuses/extend`；转发借一层媒体（`//@作者:` 拼接 desc）；视频直链为**带签名时效 URL**（Expires/ssig，即取即用），高清/标清双档；直播无回放降级文本+直播间链接；图集 `pic_infos` 优先、`pic_ids` 兜底拼 `wx2.sinaimg.cn/large/`；富文本清洗（`<a>`→文字、emoji `<img>`→alt、`<br>`→换行）；`weibo.com/{uid}/profile` 负向排除防误伤
+  - 其余 `platform-<type>` ×25 + `@sns-parse/platforms`（0.3.0-alpha.3 聚合 + `definitions[]` 导出）
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.13+upstream.1.6.7`；直依赖 platform-twitter + platform-weibo + platform-xiaohongshu）
   - `@sns-parse/cli`：CLI 兼容层（`0.2.0-alpha.2+upstream.1.6.7`）
-  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.11`）
+  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.13`）
 - 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 通过 `dependencies` 自动装全部碎片包；platforms **导出 `definitions[]`**（聚合优先通道），extensions 导出 `allExtensions()`；碎片包可自选安装（粒度覆盖聚合）。
 - 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
 - Koishi 仓库不 monorepo；通过 npm 依赖 + git submodule（`vendor/{core,extensions,platforms}`）管理。
