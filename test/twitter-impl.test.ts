@@ -260,6 +260,52 @@ describe('twitter 外链卡片（A+B）', () => {
     expect(calls).toHaveLength(1)
   })
 
+  it('正文仅剩 pic.twitter.com 自挂链（entities.urls 缺失）：desc 清洗为空，不复活 t.co', async () => {
+    const calls: string[] = []
+    const http = mkHttp({
+      __typename: 'Tweet',
+      user: { screen_name: 'koko_escape', name: 'K' },
+      text: 'https://t.co/R31vBCqiTb',
+      lang: 'zxx',
+      entities: { urls: [] },
+      mediaDetails: [
+        { type: 'photo', media_url_https: 'https://pbs.twimg.com/media/A.jpg', sizes: { large: { w: 648, h: 1788 } } },
+        { type: 'photo', media_url_https: 'https://pbs.twimg.com/media/B.jpg', sizes: { large: { w: 647, h: 1788 } } },
+      ],
+    }, null, calls)
+    const p = await parseTwitter('https://x.com/koko_escape/status/2104495843869143189', http)
+    expect(p.images).toHaveLength(2)
+    expect(p.desc).toBe('')
+    expect(p.title).toBe('')
+  })
+
+  it('syndication 429 → 退避重试一次成功', async () => {
+    let syndicationCalls = 0
+    const http = {
+      get: async (u: string) => {
+        if (u.includes('syndication')) {
+          syndicationCalls++
+          if (syndicationCalls === 1) return { status: 429, data: null }
+          return { status: 200, data: { __typename: 'Tweet', user: { screen_name: 'a' }, text: 'hello https://t.co/x1', lang: 'en', entities: { urls: [] }, mediaDetails: [{ type: 'photo', media_url_https: 'https://pbs.twimg.com/media/1.jpg' }] } }
+        }
+        throw new Error('unexpected: ' + u)
+      },
+    } as any
+    const p = await parseTwitter('https://x.com/a/status/2101111111111111111', http)
+    expect(syndicationCalls).toBe(2)
+    expect(p.images).toHaveLength(1)
+  })
+
+  it('syndication 持续 429 → 明确限流错误', async () => {
+    const http = {
+      get: async (u: string) => {
+        if (u.includes('syndication')) return { status: 429, data: null }
+        throw new Error('unexpected: ' + u)
+      },
+    } as any
+    await expect(parseTwitter('https://x.com/a/status/2101111111111111112', http)).rejects.toThrow(/限流/)
+  })
+
   it('B：纯文字推 + 外链卡片 → og:image 注入为预览图（实体解码）', async () => {
     const calls: string[] = []
     const http = mkHttp({

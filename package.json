@@ -115,10 +115,10 @@
     "@sns-parse/ext-nsfw": "^0.3.0-alpha.1",
     "@sns-parse/ext-translate": "^0.3.0-alpha.1",
     "@sns-parse/platform-bilibili": "^0.3.0-alpha.2",
-    "@sns-parse/platform-twitter": "^0.3.0-alpha.2",
+    "@sns-parse/platform-twitter": "^0.3.0-alpha.3",
     "@sns-parse/platform-weibo": "^0.3.0-alpha.2",
     "@sns-parse/platform-xiaohongshu": "^0.3.0-alpha.4",
-    "@sns-parse/platforms": "^0.3.0-alpha.4",
+    "@sns-parse/platforms": "^0.3.0-alpha.5",
     "axios": "^1.16.1",
     "https-proxy-agent": "^5.0.1"
   },
