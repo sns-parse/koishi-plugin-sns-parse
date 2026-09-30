@@ -15,6 +15,17 @@ describe('cleanUrl', () => {
   it('非 http(s) 原样返回', () => {
     expect(cleanUrl('just text')).toBe('just text')
   })
+  it('剥离 QQ 分享卡片 jump_url 的 ,preview: 尾巴', () => {
+    const raw = 'https://www.xiaohongshu.com/discovery/item/6aa81c4f000000002b027a9a?xsec_source=app_share&xsec_token=CB4d%3D&share_channel=qq,preview:https://qq.ugcimg.cn/v1/abcdef/87p8ps'
+    const cleaned = cleanUrl(raw)
+    expect(cleaned).toBe('https://www.xiaohongshu.com/discovery/item/6aa81c4f000000002b027a9a?xsec_source=app_share&xsec_token=CB4d%3D&share_channel=qq')
+    expect(cleaned).not.toContain('preview:')
+    // 端到端：规则匹配层（linkTypeParser 内部调 cleanUrl）同样剥离
+    const m = linkTypeParser(raw, RULES)
+    expect(m).toHaveLength(1)
+    expect(m[0].url).not.toContain('qq.ugcimg.cn')
+    expect(m[0].url).toContain('xsec_token=')
+  })
 })
 
 describe('linkTypeParser', () => {

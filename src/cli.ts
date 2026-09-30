@@ -237,7 +237,7 @@ function layoutDesc(layout: MergeLayout): string {
   return layout.kind === 'v' ? '垂直堆叠（水平切分）' : '水平拼接（垂直切分）'
 }
 
-async function downloadAll(p: ParsedData, type: string, outDir: string, merged: { buffer: Buffer; layout: MergeLayout } | null = null): Promise<void> {
+async function downloadAll(p: ParsedData, type: string, outDir: string, merged: Awaited<ReturnType<typeof mergeImages>> = null): Promise<void> {
   await mkdir(outDir, { recursive: true })
   const base = sanitize(p.title) || `${type}_${Date.now()}`
   console.log('\n开始下载:')
@@ -262,12 +262,21 @@ async function downloadAll(p: ParsedData, type: string, outDir: string, merged: 
     await dl(u, join(outDir, `${base}_${i + 2}${inferExt(u, '.mp4')}`), `视频 ${i + 2}/${p.extraVideos!.length + 1}`)
   }
   if (p.images.length) {
-    // --merge-images：同源切图合并成功时保存合并图，替代逐张分片
+    // --merge-images：分组契约——各组分别落盘（替代组内分片）；leftoverUrls 逐张下载
     if (merged) {
-      const f = join(outDir, `${base}_merged.jpg`)
-      await writeFile(f, merged.buffer)
-      console.log(`  ✓ 已保存合并图（${p.images.length} 片 → ${layoutDesc(merged.layout)}）: ${f}`)
-      for (const u of p.images) downloaded.add(u)
+      for (let gi = 0; gi < merged.groups.length; gi++) {
+        const g = merged.groups[gi]
+        const suffix = merged.groups.length > 1 ? `_merged${gi + 1}` : '_merged'
+        const f = join(outDir, `${base}${suffix}.jpg`)
+        await writeFile(f, g.buffer)
+        console.log(`  ✓ 已保存合并图${merged.groups.length > 1 ? `（组 ${gi + 1}/${merged.groups.length}）` : ''}（${g.urls?.length ?? p.images.length} 片 → ${layoutDesc(g.layout)}）: ${f}`)
+        for (const u of g.urls || []) downloaded.add(u)
+      }
+      const leftover = p.images.filter((u) => !downloaded.has(u))
+      for (let i = 0; i < leftover.length; i++) {
+        await dl(leftover[i], join(outDir, `${base}_extra${i + 1}${inferExt(leftover[i], '.jpg')}`), `独立图片 ${i + 1}/${leftover.length}`)
+      }
+      for (const u of leftover) downloaded.add(u)
     } else {
       for (let i = 0; i < p.images.length; i++) {
         await dl(p.images[i], join(outDir, `${base}_${i + 1}${inferExt(p.images[i], '.jpg')}`), `图片 ${i + 1}/${p.images.length}`)
@@ -347,13 +356,16 @@ async function main(): Promise<void> {
       const parsed = result.data
       debugLog('解析结果', parsed)
 
-      // --merge-images：同源切图识别与合并（独立选项，默认关闭）
-      let merged: { buffer: Buffer; layout: MergeLayout } | null = null
+      // --merge-images：同源切图识别与合并（独立选项，默认关闭）。
+      //  0.3.0-alpha.3 起为分组契约：{ groups: [{buffer, layout, urls}], leftoverUrls }——
+      //  支持部分可拼接（若干组合并 + 剩余独立）与乱序分片重排。
+      let merged: Awaited<ReturnType<typeof mergeImages>> = null
       if (args.mergeImages && parsed.images.length >= 2) {
         merged = await mergeImages(rt, parsed.images)
         if (!args.json) {
           if (merged) {
-            console.log(`▶ 同源切图: ${parsed.images.length} 片 → 已合并（${layoutDesc(merged.layout)}，${Math.round(merged.buffer.length / 1024)}KB）`)
+            const totalKB = Math.round(merged.groups.reduce((s, g) => s + g.buffer.length, 0) / 1024)
+            console.log(`▶ 同源切图: ${parsed.images.length} 片 → ${merged.groups.length} 组已合并（${merged.groups.map((g) => layoutDesc(g.layout)).join(' + ')}，${totalKB}KB）${merged.leftoverUrls.length ? `，剩余 ${merged.leftoverUrls.length} 张独立` : ''}`)
           } else {
             console.log('▶ 同源切图: 未检测到（图片非同源切分或 ffmpeg 不可用）')
           }

@@ -237,8 +237,10 @@ describe('mergeImages 端到端（内容识别）', () => {
     }
     const res = await mergeImages(rtWithImages(byUrl), urls)
     if (res === null) return // 无 ffmpeg 环境跳过
-    expect(res.layout).toEqual({ kind: 'grid', cols: 2, rows: 2 })
-    const size = probeImageSize(res.buffer)
+    expect(res.groups).toHaveLength(1)
+    expect(res.groups[0].layout).toEqual({ kind: 'grid', cols: 2, rows: 2 })
+    expect(res.leftoverUrls).toEqual([])
+    const size = probeImageSize(res.groups[0].buffer)
     expect(size?.width).toBe(512)
     expect(size?.height).toBe(256)
   }, 60000)
@@ -251,10 +253,48 @@ describe('mergeImages 端到端（内容识别）', () => {
     }
     const res = await mergeImages(rtWithImages(byUrl), urls)
     if (res === null) return
-    expect(res.layout).toEqual({ kind: 'v' })
-    const size = probeImageSize(res.buffer)
+    expect(res.groups).toHaveLength(1)
+    expect(res.groups[0].layout).toEqual({ kind: 'v' })
+    const size = probeImageSize(res.groups[0].buffer)
     expect(size?.width).toBe(256)
     expect(size?.height).toBe(368)
+  }, 60000)
+  it('乱序输入：条带顺序被打乱 → DP 链重建正确顺序合并', async () => {
+    // 母图三段：top(0-96) mid(96-224) bottom(224-368)；输入顺序打乱为 [mid, bottom, top]
+    const top = makePngPattern(256, 96, MOTHER, 0, 0)
+    const mid = makePngPattern(256, 128, MOTHER, 0, 96)
+    const bottom = makePngPattern(256, 144, MOTHER, 0, 224)
+    const urls = ['https://cdn.example.com/mid.jpg', 'https://cdn.example.com/bottom.jpg', 'https://cdn.example.com/top.jpg']
+    const byUrl: Record<string, Buffer> = {
+      [urls[0]]: mid,
+      [urls[1]]: bottom,
+      [urls[2]]: top,
+    }
+    const res = await mergeImages(rtWithImages(byUrl), urls)
+    if (res === null) return
+    expect(res.groups).toHaveLength(1)
+    expect(res.groups[0].layout).toEqual({ kind: 'v' })
+    // 组内 URL 按重排后的正确顺序（top → mid → bottom）
+    expect(res.groups[0].urls).toEqual(['https://cdn.example.com/top.jpg', 'https://cdn.example.com/mid.jpg', 'https://cdn.example.com/bottom.jpg'])
+    const size = probeImageSize(res.groups[0].buffer)
+    expect(size?.height).toBe(368)
+  }, 60000)
+  it('部分可拼接：2 张同源分片 + 1 张独立图 → 单组合并 + 独立图回落', async () => {
+    const urls = ['https://cdn.example.com/s0.jpg', 'https://cdn.example.com/s1.jpg', 'https://cdn.example.com/lonely.jpg']
+    const byUrl: Record<string, Buffer> = {
+      // 同宽：两张母图相邻分片 + 一张远区独立图（接缝不连续）
+      [urls[0]]: makePngPattern(256, 128, MOTHER, 0, 0),
+      [urls[1]]: makePngPattern(256, 160, MOTHER, 0, 128),
+      [urls[2]]: makePngPattern(256, 128, MOTHER, 9000, 7000),
+    }
+    const res = await mergeImages(rtWithImages(byUrl), urls)
+    if (res === null) return
+    expect(res.groups).toHaveLength(1)
+    expect(res.groups[0].layout).toEqual({ kind: 'v' })
+    expect(res.groups[0].urls).toHaveLength(2)
+    expect(res.leftoverUrls).toEqual(['https://cdn.example.com/lonely.jpg'])
+    const size = probeImageSize(res.groups[0].buffer)
+    expect(size?.height).toBe(288)
   }, 60000)
   it('水平拼接：母图按宽度切 3 片合一', async () => {
     const urls = [0, 1, 2].map((i) => `https://cdn.example.com/p${i}.jpg`)
@@ -265,8 +305,9 @@ describe('mergeImages 端到端（内容识别）', () => {
     }
     const res = await mergeImages(rtWithImages(byUrl), urls)
     if (res === null) return
-    expect(res.layout).toEqual({ kind: 'h' })
-    const size = probeImageSize(res.buffer)
+    expect(res.groups).toHaveLength(1)
+    expect(res.groups[0].layout).toEqual({ kind: 'h' })
+    const size = probeImageSize(res.groups[0].buffer)
     expect(size?.width).toBeGreaterThanOrEqual(780)
     expect(size?.width).toBeLessThanOrEqual(820)
     expect(size?.height).toBe(128)
@@ -286,11 +327,16 @@ describe('mergeImages 端到端（内容识别）', () => {
   }, 30000)
   it('同调色板非切片三图（接缝不连续）→ 不合并', async () => {
     const urls = [0, 1, 2].map((i) => `https://cdn.example.com/p${i}.jpg`)
-    // 同一 MOTHER 调色板但取自相距很远的区域：色调风格一致但接缝内容不连续 → 纯内容判定拒绝
+    // 同风格纹理（全局坐标哈希）但亮度基线不同：任何两张的相邻边缘都存在大基线跳变
+    // （远大于纹理幅度）→ 无论顺序/方向如何重排，接缝必然不连续 → 拒绝（含 2 张子集组合）
+    const style = (base: number) => (x: number, y: number): [number, number, number] => {
+      const h = (x * 5 + y * 11) % 13
+      return [base + h, base + h * 2, base + h]
+    }
     const byUrl: Record<string, Buffer> = {
-      [urls[0]]: makePngPattern(256, 128, MOTHER, 1000, 1000),
-      [urls[1]]: makePngPattern(256, 128, MOTHER, 5000, 3000),
-      [urls[2]]: makePngPattern(256, 128, MOTHER, 9000, 7000),
+      [urls[0]]: makePngPattern(256, 128, style(40), 1000, 1000),
+      [urls[1]]: makePngPattern(256, 128, style(120), 5000, 3000),
+      [urls[2]]: makePngPattern(256, 128, style(200), 9000, 7000),
     }
     expect(await mergeImages(rtWithImages(byUrl), urls)).toBeNull()
   }, 30000)
