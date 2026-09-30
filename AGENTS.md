@@ -53,10 +53,11 @@
   - `@sns-parse/platform-twitter`（0.3.0-alpha.2）：X syndication/GraphQL 原生解析 + 推文树/用户维度查询 + Grok 翻译（`parse`/`translate` 钩子）+ **外链卡片（t.co 预览）**：`buildLinkUrlMap`（外链原位展开/X 内部互链剥离）+ `fetchLinkCardPreview`（og:image/twitter:image 注入预览图，仅无原生媒体时，≤2 目标/10s/512KB 有界）
   - `@sns-parse/platform-xiaohongshu`（0.3.0-alpha.5）：**原生解析**——短链自展开（死链/登录墙从 redirectPath 恢复重试）→ 游客页 `__INITIAL_STATE__`（图文/视频流/互动数）→ og 兜底 → 旧网关（bugpk）兜底；rules 已带 query 捕获（**explore/discovery/board 链接的 xsec_token 不再被剥离**——旧正则会丢 query 导致网关必报 Missing xsec_token）；`xhslink.cn` 新短链域 + `m.xiaohongshu.com` 子域；互动数字段对齐（`likedCount/collectedCount/shareCount`，布尔互动态键跳过）
   - `@sns-parse/platform-weibo`（0.3.0-alpha.2）：**原生解析（passport 访客流）**——`visitor.passport.weibo.cn` genvisitor→incarnate 取 SUB cookie（模块级缓存 ~20min + 并发单飞）→ `m.weibo.cn/statuses/show`（432/未 ok 强刷访客重试一次）；URL 归一 5 形态（`weibo.com/{uid}/{bid}`、`m.weibo.cn/{status|detail|profile}/{id}`、`video.weibo.com/show?fid=1034:{mid}`、`t.cn` 短链——302 跟随后须命中微博形态否则报"指向非微博内容"）；长文走 `/statuses/extend`；转发借一层媒体（`//@作者:` 拼接 desc）；视频直链为**带签名时效 URL**（Expires/ssig，即取即用），高清/标清双档；直播无回放降级文本+直播间链接；图集 `pic_infos` 优先、`pic_ids` 兜底拼 `wx2.sinaimg.cn/large/`；富文本清洗（`<a>`→文字、emoji `<img>`→alt、`<br>`→换行）；`weibo.com/{uid}/profile` 负向排除防误伤
-  - 其余 `platform-<type>` ×25 + `@sns-parse/platforms`（0.3.0-alpha.3 聚合 + `definitions[]` 导出）
-  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.13+upstream.1.6.7`；直依赖 platform-twitter + platform-weibo + platform-xiaohongshu）
+  - `@sns-parse/platform-bilibili`（0.3.0-alpha.2）：**原生解析**——短链归一（`b23.tv`/`biliN.cn`/`b23.wtf`/`bili2233.cn` 跟随重定向）→ 预热 `bilibili.com` + SPI 取 **buvid3/buvid4**（模块级缓存 ~30min + 单飞）过 WAF（否则 412）→ `web-interface/view` 元数据 + `player/playurl?platform=html5&high_quality=1` **单文件 muxed mp4 durl**（QQ 可直放；实测该直链无需 Referer）；412/风控强刷 buvid 重试一次；支持 BV/av + `?p=` 分P；`web-interface/view` 返回的 `pic` 统一 http→https
+  - 其余 `platform-<type>` ×24 + `@sns-parse/platforms`（0.3.0-alpha.4 聚合 + `definitions[]` 导出）
+  - `@sns-parse/koishi-plugin-sns-parse`：Koishi 兼容层（`1.20.0-alpha.14+upstream.1.6.7`；直依赖 platform-bilibili + platform-twitter + platform-weibo + platform-xiaohongshu）
   - `@sns-parse/cli`：CLI 兼容层（`0.2.0-alpha.2+upstream.1.6.7`）
-  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.13`）
+  - `@char46/koishi-plugin-video-parser-all`：旧命名空间兼容壳（lockstep `1.20.0-alpha.14`）
 - 聚合包语义：`@sns-parse/extensions` / `@sns-parse/platforms` 通过 `dependencies` 自动装全部碎片包；platforms **导出 `definitions[]`**（聚合优先通道），extensions 导出 `allExtensions()`；碎片包可自选安装（粒度覆盖聚合）。
 - 配置机制：core 定义中立 DSL（`ConfigField`/`ConfigContribution`）；**配置项来自已安装的 ext-*/platform-* 声明**，koishi 层动态翻译为 Schema；CLI 层同理。
 - Koishi 仓库不 monorepo；通过 npm 依赖 + git submodule（`vendor/{core,extensions,platforms}`）管理。
@@ -66,7 +67,7 @@
 
 - **0.6 工作流+钩子迁移已完成（2026-09）**：core 内建完整工作流（flush/compose/forward 已上收 core）+ 基线实现；ext-\* 全部改 `WorkflowExtension.setup(hooks)` 注入；平台声明动态发现（聚合+粒度并集，静态 definitions/rules/gen-defs 退役）；koishi 测试 185/185（含无扩展基线全链路、updateFragments 判定）。
 - **运行时实现切换（2026-09，已被 0.6 取代）**：引擎与扩展实现来自外部包；`src/services/nsfw/*` 仅剩 ext-nsfw 的路径兼容 shim。
-- **碎片包热更（1.20.0-alpha.10）**：`updateFragments()`（self-update.ts）——范围内更新全部 `@sns-parse/*` 碎片包（0.x minor 锁语义 `inRange()`；范围外仅提示升本体；**未声明范围的包按当前版本 caret 保守锁**）；触发：设置触发器 `updateFragmentsTrigger`（开启并保存即执行一次并自动复位写 override）/`parse/update --fragments`/`updateOnStartup`/`autoUpdateHours` 自动链路一并更碎片；装完 `applyReload`。真按钮卡片（`ctx.console.addEntry`）留待后续（需 `@koishijs/client` 构建链与用户 console 大版本对齐）。
+- **碎片包热更（1.20.0-alpha.10）**：`updateFragments()`（self-update.ts）——范围内更新全部 `@sns-parse/*` 碎片包（0.x minor 锁语义 `inRange()`；范围外仅提示升本体；**未声明范围的包按当前版本 caret 保守锁**）；**alpha.14 起改为批量单次安装（`installMany`，一次包管理器调用）+ 失败回退逐包**（避免逐包 `yarn add` 的锁文件抖动/一颗坏包拖垮全部）；触发：设置触发器 `updateFragmentsTrigger`（开启并保存即执行一次并自动复位写 override）/`parse/update --fragments`/`updateOnStartup`/`autoUpdateHours` 自动链路一并更碎片；装完 `applyReload`。真按钮卡片（`ctx.console.addEntry`）留待后续（需 `@koishijs/client` 构建链与用户 console 大版本对齐）。
 - **自更新（1.20.0-alpha.7）**：`src/services/self-update.ts`——设置（updateOnStartup）/ 定时（autoUpdateHours）/ 命令（parse/update，authority 3）三路触发；registry 解析（显式 > 项目 .npmrc > 用户 .npmrc > npmmirror）；锁文件探测 PM（pnpm/yarn classic+berry/npm）；守护进程（IPC 存在）下 `loader.fullReload()`（退出码 51 自动重启），否则提示手动重启；主版本跨越不自动更。
 - tag 触发的 CI 发布（含发布后自动 npmmirror 同步）尚未演练过：push 一个 `v*` tag 即可验证。
 - 旧包 `@sns-parse/extensions@0.1.0`（实现版）已 `deprecate`；如需移除请在 npm 网页操作。

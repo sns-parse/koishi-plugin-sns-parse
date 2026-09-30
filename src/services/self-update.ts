@@ -105,9 +105,19 @@ export async function fetchLatestVersion(pkg: string, registry: string): Promise
 
 /** 安装指定版本（有界等待，超时整树击杀；输出留尾部用于报错） */
 export function installVersion(pkg: string, version: string, baseDir: string, registry: string, timeoutMs = 600000): Promise<{ ok: boolean; message: string }> {
+  return runInstall([`${pkg}@${version}`], baseDir, registry, timeoutMs, `${pkg}@${version}`)
+}
+
+/** 批量安装（一次包管理器调用，避免逐包 add 的锁文件抖动/多次解析） */
+export function installMany(list: { name: string; version: string }[], baseDir: string, registry: string, timeoutMs = 600000): Promise<{ ok: boolean; message: string }> {
+  const specs = list.map(x => `${x.name}@${x.version}`)
+  return runInstall(specs, baseDir, registry, timeoutMs, list.map(x => x.name).join('、'))
+}
+
+function runInstall(specs: string[], baseDir: string, registry: string, timeoutMs: number, label: string): Promise<{ ok: boolean; message: string }> {
   return new Promise((resolve) => {
     const pm = detectPackageManager(baseDir)
-    const args = [...pm.args, `${pkg}@${version}`]
+    const args = [...pm.args, ...specs]
     let out = ''
     let settled = false
     const child = spawn(pm.cmd, args, {
@@ -135,7 +145,7 @@ export function installVersion(pkg: string, version: string, baseDir: string, re
     child.stderr?.on('data', (d) => { out = (out + String(d)).slice(-4000) })
     child.on('error', (e) => finish(false, `无法启动 ${pm.label}：${e.message}`))
     child.on('close', (code) => {
-      if (code === 0) finish(true, `${pm.label} 安装 ${pkg}@${version} 完成`)
+      if (code === 0) finish(true, `${pm.label} 安装 ${label} 完成`)
       else finish(false, `${pm.label} 退出码 ${code}：\n${out.split(/\r?\n/).filter(Boolean).slice(-6).join('\n')}`)
     })
   })
@@ -382,18 +392,29 @@ export async function updateFragments(opts: {
     const toInstall = statuses.filter(s => s.updateKind === 'in-range' && s.target)
     const outOfRange = statuses.filter(s => s.updateKind === 'out-of-range').map(s => s.name)
     const updated: FragmentInstall[] = []
-    for (const s of toInstall) {
-      await opts.notify?.(`更新 ${s.name}：${s.current} → ${s.target}（范围内）`)
-      const baseDir = opts.baseDir || process.cwd()
-      const registry = resolveRegistry(opts.registry, baseDir, process.env.USERPROFILE || process.env.HOME || '')
-      const inst = await installVersion(s.name, s.target!, baseDir, registry, opts.timeoutMs)
-      if (inst.ok) updated.push({ name: s.name, version: s.target! })
-      else await opts.notify?.(`安装 ${s.name} 失败：${inst.message}`)
+    const failed: string[] = []
+    const baseDir = opts.baseDir || process.cwd()
+    const registry = resolveRegistry(opts.registry, baseDir, process.env.USERPROFILE || process.env.HOME || '')
+    if (toInstall.length) {
+      // 批量单次安装（原子、少一次锁文件抖动）；失败再逐包回退，避免一颗坏包拖垮全部
+      await opts.notify?.(`批量更新 ${toInstall.length} 个碎片包：${toInstall.map(s => `${s.name}@${s.target}`).join('、')}`)
+      const batch = await installMany(toInstall.map(s => ({ name: s.name, version: s.target! })), baseDir, registry, opts.timeoutMs)
+      if (batch.ok) {
+        for (const s of toInstall) updated.push({ name: s.name, version: s.target! })
+      } else {
+        await opts.notify?.(`批量安装失败，逐包重试。原因：${batch.message}`)
+        for (const s of toInstall) {
+          const inst = await installVersion(s.name, s.target!, baseDir, registry, opts.timeoutMs)
+          if (inst.ok) updated.push({ name: s.name, version: s.target! })
+          else { failed.push(s.name); await opts.notify?.(`安装 ${s.name} 失败：${inst.message}`) }
+        }
+      }
     }
     const parts: string[] = []
     parts.push(updated.length
       ? `已更新 ${updated.length} 个碎片包（${updated.map(u => `${u.name}@${u.version}`).join('、')}）`
-      : '碎片包均已是范围内最新')
+      : (toInstall.length ? '碎片包更新失败' : '碎片包均已是范围内最新'))
+    if (failed.length) parts.push(`失败：${failed.join('、')}`)
     if (outOfRange.length) parts.push(`以下包有范围外新版本（需升级本体插件）：${outOfRange.join('、')}`)
     if (updated.length) {
       parts.push(typeof (process as any).send === 'function' ? '守护进程将自动重载生效' : '需重启 Koishi 后生效')

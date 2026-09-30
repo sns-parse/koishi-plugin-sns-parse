@@ -124,6 +124,9 @@ importers:
       '@sns-parse/ext-translate':
         specifier: ^0.3.0-alpha.1
         version: 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/platform-bilibili':
+        specifier: ^0.3.0-alpha.2
+        version: 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-twitter':
         specifier: ^0.3.0-alpha.2
         version: 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -134,8 +137,8 @@ importers:
         specifier: ^0.3.0-alpha.4
         version: 0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platforms':
-        specifier: ^0.3.0-alpha.3
-        version: 0.3.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.3.0-alpha.4
+        version: 0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       axios:
         specifier: ^1.16.1
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -1225,8 +1228,8 @@ packages:
     resolution: {integrity: sha512-bl5us0Pa+/Y1wskdrHBuLU82w0bCmv6I0YdOUJ4x8TsnXE8MIu4lp2UsFwUhJjIBnwg35LfidBBE/1wiNpXQ7Q==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/platform-bilibili@0.3.0-alpha.1':
-    resolution: {integrity: sha512-3ZgFc47xjEUrdYwnw/p7zGzbgz4Y9L6uH4TddlrgWbf69sV9hseY/zpbfE7Iw7AxAmT0E0xEStoIurOPrjdwwQ==}
+  '@sns-parse/platform-bilibili@0.3.0-alpha.2':
+    resolution: {integrity: sha512-5QzQUarC6aJk18y2/apqA1UWELNGSY/+V2h4lbhOplDi1zWKSd+oPi9Gy8irUWafOy5lAOGpNnT5Anid8c2QEQ==}
     engines: {node: '>=16.0.0'}
 
   '@sns-parse/platform-doubao@0.3.0-alpha.1':
@@ -1329,8 +1332,8 @@ packages:
     resolution: {integrity: sha512-nirBkC89+Tedm1xK01ROpuK6oKgWHzVZRSPORX1VGpjm/uNZk3cHUbGbGmoB00GzTApmaJK7yEz/R9/gzLRlNg==}
     engines: {node: '>=16.0.0'}
 
-  '@sns-parse/platforms@0.3.0-alpha.3':
-    resolution: {integrity: sha512-JoKZy2+gu1KQ5Z1kqnOI0WPGfR+Cl6KCXmAIuj5dTyMwTpJtxr31Ht/5uEi585+7yVZl8XGmMABNbOEivF6kLA==}
+  '@sns-parse/platforms@0.3.0-alpha.4':
+    resolution: {integrity: sha512-hcuEO25gngflXulPidcS9Z19wge683mcsh9Ny4pndZw7zMrmCkJNSC1rm+w9jiHFMt5stJa+0bG1RrxA/pBp9g==}
     engines: {node: '>=16.0.0'}
 
   '@standard-schema/spec@1.1.0':
@@ -3745,9 +3748,10 @@ snapshots:
       - debug
       - supports-color
 
-  '@sns-parse/platform-bilibili@0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/platform-bilibili@0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -3930,11 +3934,11 @@ snapshots:
       - debug
       - supports-color
 
-  '@sns-parse/platforms@0.3.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@sns-parse/platforms@0.3.0-alpha.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@sns-parse/core': 0.6.0-alpha.3(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-acfun': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      '@sns-parse/platform-bilibili': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@sns-parse/platform-bilibili': 0.3.0-alpha.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-doubao': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-doubao_image': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@sns-parse/platform-douyin': 0.3.0-alpha.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
