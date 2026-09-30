@@ -124,7 +124,17 @@ function runInstall(specs: string[], baseDir: string, registry: string, timeoutM
       cwd: baseDir,
       shell: true,
       windowsHide: true,
-      env: { ...process.env, npm_config_registry: registry, YARN_NPM_REGISTRY_SERVER: registry },
+      // stdin 关闭：包管理器绝不能交互（yarn/npm 提示等待输入会把进程挂到超时）
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        // CI=1 强制非交互模式；自动确认 npm 询问
+        CI: 'true',
+        npm_config_yes: 'true',
+        npm_config_registry: registry,
+        YARN_NPM_REGISTRY_SERVER: registry,
+        YARN_ENABLE_IMMUTABLE_INSTALLS: 'false',
+      },
     })
     const finish = (ok: boolean, message: string) => {
       if (settled) return

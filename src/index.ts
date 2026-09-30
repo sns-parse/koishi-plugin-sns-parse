@@ -204,6 +204,8 @@ export function createPlugin(pluginName: string) {
       const notify = async (text: string) => {
         try { await session?.send(text) } catch {}
       }
+      // 先回一句话：安装是长任务（可达数分钟），避免"没反应"观感；权限不足时本命令根本不会被匹配
+      await notify('正在检查更新…（安装可能需要几分钟，期间无输出属正常）')
       if (options?.fragments) {
         const fr = await updateFragments({ baseDir, registry: config.updateRegistry, notify })
         if (fr.updated.length) applyReload(ctx)
@@ -218,15 +220,24 @@ export function createPlugin(pluginName: string) {
     })
 
   // ④ 设置触发器：updateFragmentsTrigger 开启并保存 → 执行一次碎片更新并自动复位（写 override）
+  //    复位优先（finally 语义）：无论更新成败开关都要回落；非守护进程下复位需重启后可见
   if (config.updateFragmentsTrigger) {
     const t = setTimeout(async () => {
+      let fr: Awaited<ReturnType<typeof updateFragments>> | null = null
       try {
-        const fr = await updateFragments({ baseDir, registry: config.updateRegistry })
+        fr = await updateFragments({ baseDir, registry: config.updateRegistry })
         logger.info(`碎片更新：${fr.message}`)
-        writeOverride(baseDir, pluginName, { ...config, updateFragmentsTrigger: false }, pluginName)
-        if (fr.updated.length) applyReload(ctx)
       } catch (e: any) {
         logger.warn(`碎片更新失败：${e?.message || e}`)
+      } finally {
+        try {
+          writeOverride(baseDir, pluginName, { ...config, updateFragmentsTrigger: false }, pluginName)
+        } catch { /* override 写失败不掩盖更新结果 */ }
+      }
+      if (fr?.updated.length) {
+        const daemon = typeof (process as any).send === 'function'
+        logger.info(daemon ? '守护进程将自动重载生效' : '需重启 Koishi 后生效（配置开关也将在重启后复位）')
+        applyReload(ctx)
       }
     }, 2000)
     ;(t as any).unref?.()
