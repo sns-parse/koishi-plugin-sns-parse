@@ -6,6 +6,7 @@ import { join, resolve, extname } from 'path'
 import { linkTypeParser } from './utils/url'
 import { collectPlatformLinkRules } from '@sns-parse/core'
 import { createRuntime } from './runtime'
+import { createConsoleHost } from './host'
 import { getPlatformConfig } from './platforms/custom'
 import { parseUrl } from './engine/fetcher'
 import { generateFormattedText, formatDuration, formatPublishTime } from './utils/format'
@@ -14,7 +15,6 @@ import { langName } from './utils/translate'
 import { mergeImages, type MergeLayout } from './utils/merge'
 import { shutdownTlsClient } from './utils/tls-client'
 import { createConfigEnvelope, serializeConfigEnvelope, parseConfigInput, mergeConfig } from './services/config-io'
-import type { Context } from 'koishi'
 import type { ParsedData } from './types'
 
 const PLUGIN_NAME = 'video-parser-all'
@@ -342,8 +342,7 @@ async function main(): Promise<void> {
     }
   }
 
-  const ctx = {} as Context
-  const rt = createRuntime(ctx, config)
+  const rt = createRuntime(createConsoleHost({ baseDir: process.cwd(), verbose: args.debug }), config)
 
   let exitCode = 0
   try {

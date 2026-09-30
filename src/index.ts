@@ -5,12 +5,14 @@ import { logger, debugLog, setVerboseLogging, setLogger } from './utils/logger'
 import { getText } from './utils/common'
 import { linkTypeParser, extractAllUrlsFromMessage } from './utils/url'
 import { createRuntime } from './runtime'
+import { createKoishiHost } from './host'
 import { sendWithTimeout } from './sender/sender'
 import { flush } from './sender/flush'
 import { diagnoseTls } from './utils/tls-client'
 import { videoVault, configureVault } from './services/nsfw/vault'
 import { initModerationCache, flushModerationCache } from './services/nsfw/moderation/cache'
-import { performSelfUpdate, applyReload, updateFragments, describeFragments } from './services/self-update'
+import { performSelfUpdate, applyReload } from './services/update/self'
+import { updateFragments, describeFragments } from './services/update/fragments'
 import { collectCapabilities } from '@sns-parse/core'
 import {
   applyOverrideToConfig, createConfigEnvelope, serializeConfigEnvelope,
@@ -41,7 +43,7 @@ export function createPlugin(pluginName: string) {
   logger.info('插件启动')
   logger.info(`已加载碎片包：${describeFragments()}`)
 
-  let rt = createRuntime(ctx, config)
+  let rt = createRuntime(createKoishiHost(ctx, pluginName), config)
 
   // 内容安全子系统：按配置初始化 vault 与审核缓存（配置签名变更自动作废旧持久化结果）
   if (config.nsfwVault) configureVault(config.nsfwVault)
@@ -139,7 +141,7 @@ export function createPlugin(pluginName: string) {
         const keys = diffKeys(rt.config, parsed.config)
         const merged = mergeConfig(rt.config, parsed.config)
         const file = writeOverride(baseDir, pluginName, merged, pluginName)
-        rt = createRuntime(ctx, merged)
+        rt = createRuntime(createKoishiHost(ctx, pluginName), merged)
         setVerboseLogging(merged.debug || false)
         const from = parsed.pluginName ? `（来源命名空间：${parsed.pluginName}）` : ''
         const keyList = keys.length ? `，${keys.slice(0, 20).join('、')}${keys.length > 20 ? '…' : ''}` : ''

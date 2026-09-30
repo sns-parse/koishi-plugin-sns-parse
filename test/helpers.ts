@@ -1,5 +1,5 @@
-import type { Context } from 'koishi'
 import { createRuntime, ParserRuntime } from '../src/runtime'
+import { createPlainHost } from '../src/host'
 
 /** 构造一份足够驱动 flush/fetchApi/getPlatformConfig 的默认配置 */
 export function makeConfig(overrides: Record<string, any> = {}): any {
@@ -76,9 +76,8 @@ export function mockHttp(payloadByMatcher: ((url: string) => any) | any) {
 
 /** 构造 ParserRuntime，并用 mock http 替换真实 axios 实例 */
 export function makeRuntime(opts: { config?: any; http?: any } = {}): ParserRuntime {
-  const ctx = {} as Context
   const config = makeConfig(opts.config)
-  const rt = createRuntime(ctx, config)
+  const rt = createRuntime(createPlainHost(), config)
   if (opts.http) (rt as any).http = opts.http
   return rt
 }

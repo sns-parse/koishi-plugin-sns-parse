@@ -1,7 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createRuntime as coreCreateRuntime, flush, type OutboundSender, type OutboundElement } from '@sns-parse/core'
-import { inRange, listFragments, describeFragments, FRAGMENT_PACKAGES } from '../src/services/self-update'
+import { inRange } from '../src/services/update/semver'
+import { listFragments, describeFragments, FRAGMENT_PACKAGES, updateFragments, installedVersion } from '../src/services/update/fragments'
+import { installSpecs } from '../src/services/update/pm'
 import { makeConfig, mockSession } from './helpers'
+
+vi.mock('../src/services/update/pm', () => ({
+  installSpecs: vi.fn(),
+}))
 
 describe('无扩展基线全链路（WorkflowExtension=[] 也能跑通）', () => {
   it('flush：逐张图 / 视频直发 / 不合并 / 不崩', async () => {
@@ -107,5 +113,74 @@ describe('updateFragments 范围内更新判定', () => {
     expect(s).toContain('platform-xiaohongshu@0.3.0')
     expect(s).toContain('platform-twitter@0.3.0')
     expect(s).toContain('ext-nsfw@0.3.0')
+  })
+})
+
+describe('listFragments 重做版分类', () => {
+  it('stale：registry 展示版本旧于本地（镜像滞后不误报已最新）', async () => {
+    const rows = await listFragments({
+      registry: 'https://example.invalid',
+      names: ['@sns-parse/core'],
+      fetchPackumentImpl: async () => ({ latest: '0.1.0', versions: ['0.1.0'] }),
+    })
+    expect(rows[0].updateKind).toBe('stale')
+  })
+  it('unknown：fetch 失败重试一次后仍失败（单包失败不影响分类产出）', async () => {
+    let calls = 0
+    const rows = await listFragments({
+      registry: 'https://example.invalid',
+      names: ['@sns-parse/core'],
+      fetchPackumentImpl: async () => { calls++; throw new Error('boom') },
+    })
+    expect(rows[0].updateKind).toBe('unknown')
+    expect(calls).toBe(2)
+  })
+})
+
+describe('updateFragments 装后核验（防假成功）', () => {
+  const NEXT: Record<string, string> = {
+    '@sns-parse/core': '0.6.0-alpha.99',
+    '@sns-parse/ext-nsfw': '0.3.0-alpha.99',
+  }
+  const fetchNext = async (pkg: string) => ({ latest: NEXT[pkg], versions: [NEXT[pkg]] })
+  it('退出码成功但版本未落盘 → failed（假成功识别，不进 updated）', async () => {
+    vi.mocked(installSpecs).mockResolvedValue({ ok: true, message: 'done', pm: 'test' })
+    const rows = await updateFragments({
+      registry: 'https://example.invalid',
+      names: ['@sns-parse/core'],
+      fetchPackumentImpl: fetchNext,
+    })
+    expect(rows.updated).toEqual([])
+    expect(rows.failed).toEqual([{ name: '@sns-parse/core', version: '0.6.0-alpha.99' }])
+    expect(rows.message).toContain('失败')
+  })
+  it('规划 → 单次批量精确钉版（installSpecs 收到 name@exact 全量规格）', async () => {
+    const calls: string[][] = []
+    vi.mocked(installSpecs).mockImplementation(async (specs: string[]) => {
+      calls.push(specs)
+      return { ok: true, message: 'done', pm: 'test' }
+    })
+    await updateFragments({
+      registry: 'https://example.invalid',
+      names: ['@sns-parse/core', '@sns-parse/ext-nsfw'],
+      fetchPackumentImpl: fetchNext,
+    })
+    expect(calls.length).toBe(1) // 一次批量调用，无逐包抖动
+    expect(calls[0]).toEqual(['@sns-parse/core@0.6.0-alpha.99', '@sns-parse/ext-nsfw@0.3.0-alpha.99'])
+  })
+  it('批量失败 → 逐包隔离重试（installSpecs 共 3 次调用）', async () => {
+    const calls: string[][] = []
+    vi.mocked(installSpecs).mockImplementation(async (specs: string[]) => {
+      calls.push(specs)
+      return { ok: specs.length === 1, message: 'batch fail', pm: 'test' }
+    })
+    const rows = await updateFragments({
+      registry: 'https://example.invalid',
+      names: ['@sns-parse/core', '@sns-parse/ext-nsfw'],
+      fetchPackumentImpl: fetchNext,
+    })
+    expect(calls.length).toBe(3) // 1 次批量 + 2 次逐包
+    expect(rows.updated).toEqual([])
+    expect(rows.failed.map(f => f.name)).toEqual(['@sns-parse/core', '@sns-parse/ext-nsfw'])
   })
 })

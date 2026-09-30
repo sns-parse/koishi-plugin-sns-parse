@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { mkdirSync, writeFileSync, rmSync } from 'fs'
 import { join } from 'path'
-import {
-  packageNameFor, stripBuildMeta, compareVersions, detectPackageManager, resolveRegistry,
-} from '../src/services/self-update'
+import { packageNameFor } from '../src/services/update/self'
+import { stripBuildMeta, compareVersions } from '../src/services/update/semver'
+import { detectPackageManager } from '../src/services/update/pm'
+import { resolveRegistry } from '../src/services/update/registry'
 
 const TMP = join(process.env.TEMP || process.env.TMP || '.', 'opencode', 'self-update-test')
 
