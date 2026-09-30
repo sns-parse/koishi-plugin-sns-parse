@@ -13,6 +13,7 @@ import { videoVault, configureVault } from './services/nsfw/vault'
 import { initModerationCache, flushModerationCache } from './services/nsfw/moderation/cache'
 import { performSelfUpdate, applyReload } from './services/update/self'
 import { updateFragments, describeFragments } from './services/update/fragments'
+import { handleUpdateTrigger } from './services/update/trigger'
 import { collectCapabilities } from '@sns-parse/core'
 import {
   applyOverrideToConfig, createConfigEnvelope, serializeConfigEnvelope,
@@ -221,29 +222,11 @@ export function createPlugin(pluginName: string) {
       return r.message
     })
 
-  // ④ 设置触发器：updateFragmentsTrigger 开启并保存 → 执行一次碎片更新并自动复位（写 override）
-  //    复位优先（finally 语义）：无论更新成败开关都要回落；非守护进程下复位需重启后可见
-  if (config.updateFragmentsTrigger) {
-    const t = setTimeout(async () => {
-      let fr: Awaited<ReturnType<typeof updateFragments>> | null = null
-      try {
-        fr = await updateFragments({ baseDir, registry: config.updateRegistry })
-        logger.info(`碎片更新：${fr.message}`)
-      } catch (e: any) {
-        logger.warn(`碎片更新失败：${e?.message || e}`)
-      } finally {
-        try {
-          writeOverride(baseDir, pluginName, { ...config, updateFragmentsTrigger: false }, pluginName)
-        } catch { /* override 写失败不掩盖更新结果 */ }
-      }
-      if (fr?.updated.length) {
-        const daemon = typeof (process as any).send === 'function'
-        logger.info(daemon ? '守护进程将自动重载生效' : '需重启 Koishi 后生效（配置开关也将在重启后复位）')
-        applyReload(ctx)
-      }
-    }, 2000)
-    ;(t as any).unref?.()
-  }
+  // ④ 设置触发器：updateFragmentsTrigger 开启并保存 → 恰好执行一次碎片更新并复位
+  //    重做版（services/update/trigger.ts）：消费标记防重（一次保存只执行一次，
+  //    fullReload/重启风暴不重复安装）；复位走 override 单键（不再全量快照固化配置）
+  //    + cordis scope.update 热更（控制台即时回落）；ctx.setTimeout dispose 自清理
+  handleUpdateTrigger(ctx, config, baseDir, pluginName, logger)
 
   ctx.on('dispose', () => {
     rt.urlCacheLocal.clear()
